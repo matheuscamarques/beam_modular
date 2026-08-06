@@ -6,8 +6,10 @@
 
 /**
  * @file beam_scheduler.h
- * @brief Public Opaque Interface for Processes (PCB) and Run Queues.
+ * @brief Public Opaque Interface for Processes (PCB), Run Queues, and Scheduler Engine.
  */
+
+#define BEAM_DEFAULT_REDUCTIONS 4000
 
 typedef struct beam_process beam_process_t;
 typedef struct beam_run_queue beam_run_queue_t;
@@ -54,5 +56,11 @@ void beam_run_queue_destroy(beam_run_queue_t* rq);
 beam_result_t beam_run_queue_enqueue(beam_run_queue_t* rq, beam_process_t* proc, beam_priority_t prio);
 beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq);
 size_t beam_run_queue_count(const beam_run_queue_t* rq);
+
+/* Scheduler Execution Engine */
+beam_scheduler_t* beam_scheduler_create(uint32_t id, beam_run_queue_t* rq, const beam_allocator_i* alloc);
+void beam_scheduler_destroy(beam_scheduler_t* sched);
+
+beam_result_t beam_scheduler_step(beam_scheduler_t* sched, const beam_instruction_t* code, size_t code_len);
 
 #endif /* BEAM_SCHEDULER_H */

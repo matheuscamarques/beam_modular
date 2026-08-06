@@ -27,8 +27,8 @@ target_include_directories(beam_memory_mod PRIVATE src/memory)
 add_library(beam_messaging_mod STATIC src/messaging/erl_message.c)
 target_include_directories(beam_messaging_mod PRIVATE src/messaging)
 
-add_library(beam_scheduler_mod STATIC src/scheduler/erl_process.c src/scheduler/run_queue.c)
-target_include_directories(beam_scheduler_mod PRIVATE src/scheduler)
+add_library(beam_scheduler_mod STATIC src/scheduler/erl_process.c src/scheduler/run_queue.c src/scheduler/beam_scheduler_loop.c)
+target_include_directories(beam_scheduler_mod PRIVATE src/scheduler src/emulator)
 target_link_libraries(beam_scheduler_mod PRIVATE beam_messaging_mod)
 
 add_library(beam_emulator_mod STATIC src/emulator/beam_emu.c src/emulator/beam_bif.c src/emulator/beam_load.c src/emulator/beam_code_server.c)
@@ -49,6 +49,11 @@ target_link_libraries(beam_core_bin PRIVATE beam_memory_mod beam_scheduler_mod b
 
 # Unit Tests
 enable_testing()
+
+add_executable(test_scheduler_loop tests/unit/test_scheduler_loop.c)
+target_include_directories(test_scheduler_loop PRIVATE src/emulator)
+target_link_libraries(test_scheduler_loop PRIVATE beam_scheduler_mod beam_emulator_mod beam_messaging_mod beam_mocks)
+add_test(NAME test_scheduler_loop COMMAND test_scheduler_loop)
 
 add_executable(test_code_server tests/unit/test_code_server.c)
 target_link_libraries(test_code_server PRIVATE beam_emulator_mod beam_mocks)
