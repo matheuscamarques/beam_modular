@@ -19,6 +19,8 @@ typedef enum {
     BEAM_OP_RETURN,
     BEAM_OP_SEND,
     BEAM_OP_RECEIVE,
+    BEAM_OP_MATCH_TUPLE,
+    BEAM_OP_GET_TUPLE_ELEMENT,
     BEAM_OP_HALT
 } beam_opcode_t;
 

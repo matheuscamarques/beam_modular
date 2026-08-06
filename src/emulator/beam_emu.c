@@ -116,6 +116,31 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 break;
             }
 
+            case BEAM_OP_MATCH_TUPLE: {
+                /* arg1: tuple reg, arg2: expected arity */
+                uint32_t src_reg = instr->arg1;
+                uint32_t expected_arity = instr->arg2;
+                if (src_reg < BEAM_NUM_X_REGISTERS) {
+                    Eterm val = frame.x_regs[src_reg];
+                    if (!beam_is_tuple(val) || beam_tuple_arity(val) != (size_t)expected_arity) {
+                        return BEAM_ERR_BADARG;
+                    }
+                }
+                break;
+            }
+
+            case BEAM_OP_GET_TUPLE_ELEMENT: {
+                /* arg1: tuple reg, arg2: elem index, arg3: dst reg */
+                uint32_t src_reg = instr->arg1;
+                uint32_t elem_idx = instr->arg2;
+                uint32_t dst_reg = instr->arg3;
+                if (src_reg < BEAM_NUM_X_REGISTERS && dst_reg < BEAM_NUM_X_REGISTERS) {
+                    Eterm tuple_val = frame.x_regs[src_reg];
+                    frame.x_regs[dst_reg] = beam_tuple_element(tuple_val, elem_idx);
+                }
+                break;
+            }
+
             case BEAM_OP_HALT: {
                 if (out_result) {
                     *out_result = frame.x_regs[0];
