@@ -12,6 +12,18 @@ struct beam_file {
     char module_name[64];
     char** atom_table;
     size_t atom_count;
+    
+    const uint8_t* code_chunk;
+    size_t code_chunk_len;
+    const uint8_t* lit_chunk;
+    size_t lit_chunk_len;
+    const uint8_t* exp_chunk;
+    size_t exp_chunk_len;
+    const uint8_t* imp_chunk;
+    size_t imp_chunk_len;
+    const uint8_t* str_chunk;
+    size_t str_chunk_len;
+    
     beam_allocator_i alloc;
 };
 

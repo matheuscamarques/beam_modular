@@ -37,6 +37,7 @@ beam_file_t* beam_file_parse(const uint8_t* buffer, size_t size, const beam_allo
 
         /* Process Atom Table Chunks: Atom or AtU8 */
         if (strcmp(chunk_id, "Atom") == 0 || strcmp(chunk_id, "AtU8") == 0) {
+            bool is_atu8 = (strcmp(chunk_id, "AtU8") == 0);
             uint32_t num_atoms = read_u32_be(&buffer[pos]);
             beam->atom_count = num_atoms;
             beam->atom_table = (char**)alloc->alloc(alloc->ctx, sizeof(char*) * num_atoms);
@@ -44,8 +45,15 @@ beam_file_t* beam_file_parse(const uint8_t* buffer, size_t size, const beam_allo
                 memset(beam->atom_table, 0, sizeof(char*) * num_atoms);
                 size_t atom_pos = pos + 4;
                 for (uint32_t i = 0; i < num_atoms; i++) {
-                    uint8_t len = buffer[atom_pos];
-                    atom_pos++;
+                    uint16_t len;
+                    if (is_atu8) {
+                        len = ((uint16_t)buffer[atom_pos] << 8) | buffer[atom_pos + 1];
+                        atom_pos += 2;
+                    } else {
+                        len = buffer[atom_pos];
+                        atom_pos += 1;
+                    }
+                    
                     char* name = (char*)alloc->alloc(alloc->ctx, len + 1);
                     if (name) {
                         memcpy(name, &buffer[atom_pos], len);
@@ -58,6 +66,21 @@ beam_file_t* beam_file_parse(const uint8_t* buffer, size_t size, const beam_allo
                     atom_pos += len;
                 }
             }
+        } else if (strcmp(chunk_id, "Code") == 0) {
+            beam->code_chunk = &buffer[pos];
+            beam->code_chunk_len = chunk_len;
+        } else if (strcmp(chunk_id, "LitT") == 0) {
+            beam->lit_chunk = &buffer[pos];
+            beam->lit_chunk_len = chunk_len;
+        } else if (strcmp(chunk_id, "ExpT") == 0) {
+            beam->exp_chunk = &buffer[pos];
+            beam->exp_chunk_len = chunk_len;
+        } else if (strcmp(chunk_id, "ImpT") == 0) {
+            beam->imp_chunk = &buffer[pos];
+            beam->imp_chunk_len = chunk_len;
+        } else if (strcmp(chunk_id, "StrT") == 0) {
+            beam->str_chunk = &buffer[pos];
+            beam->str_chunk_len = chunk_len;
         }
 
         /* 4-byte alignment padding for chunks */

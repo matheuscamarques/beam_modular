@@ -15,26 +15,26 @@ void test_beam_binary_parser(void) {
 
     /* Construct Mock Valid BEAM File Buffer:
      * 0..3: "FOR1"
-     * 4..7: total_len (u32 big endian) = 36
+     * 4..7: total_len (u32 big endian) = 34 (42 - 8)
      * 8..11: "BEAM"
      * --- AtU8 Chunk ---
      * 12..15: "AtU8"
-     * 16..19: chunk_len = 20
+     * 16..19: chunk_len = 22
      * 20..23: num_atoms = 2
-     * 24: len = 9, string = "my_module"
-     * 34: len = 5, string = "hello"
-     * 40: 0 (padding)
+     * 24..34: len = 9, string = "my_module"
+     * 35..41: len = 5, string = "hello"
      */
     uint8_t mock_beam[] = {
         'F', 'O', 'R', '1',
-        0x00, 0x00, 0x00, 0x24, /* 36 bytes payload */
+        0x00, 0x00, 0x00, 0x22, /* 34 bytes payload */
         'B', 'E', 'A', 'M',
         /* AtU8 Chunk */
         'A', 't', 'U', '8',
-        0x00, 0x00, 0x00, 0x14, /* 20 bytes */
+        0x00, 0x00, 0x00, 0x16, /* 22 bytes */
         0x00, 0x00, 0x00, 0x02, /* 2 atoms */
-        9, 'm', 'y', '_', 'm', 'o', 'd', 'u', 'l', 'e',
-        5, 'h', 'e', 'l', 'l', 'o'
+        0x00, 9, 'm', 'y', '_', 'm', 'o', 'd', 'u', 'l', 'e',
+        0x00, 5, 'h', 'e', 'l', 'l', 'o',
+        0x00, 0x00 /* 2 bytes padding */
     };
 
     beam_file_t* beam = beam_file_parse(mock_beam, sizeof(mock_beam), &alloc);
@@ -48,11 +48,11 @@ void test_beam_binary_parser(void) {
     assert(strcmp(beam_file_get_atom(beam, 0), "my_module") == 0);
     assert(strcmp(beam_file_get_atom(beam, 1), "hello") == 0);
 
+    printf("  [RESULT] Module '%s' parsed cleanly with 2 atoms!\n", mod_name);
     beam_file_destroy(beam);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] Module '%s' parsed cleanly with 2 atoms!\n", mod_name);
     printf("  [PASSED] test_beam_binary_parser\n");
 }
 

@@ -30,11 +30,19 @@ typedef uintptr_t Eterm;
 #define TAG_PRIMARY_IMMED1 0x03
 
 #define TAG_IMMED1_SMALL_INT (0x00 << 2 | TAG_PRIMARY_IMMED1)
+#define TAG_IMMED1_PORT      (0x01 << 2 | TAG_PRIMARY_IMMED1)
 #define TAG_IMMED1_ATOM      (0x02 << 2 | TAG_PRIMARY_IMMED1)
 #define TAG_IMMED1_PID       (0x03 << 2 | TAG_PRIMARY_IMMED1)
-#define SUBTAG_TUPLE        0x00
 
-#define ETERM_NIL (0x0F << 2 | TAG_PRIMARY_IMMED1)
+#define SUBTAG_TUPLE         0x00
+#define SUBTAG_FLOAT         0x04
+#define SUBTAG_POS_BIG       0x08
+#define SUBTAG_NEG_BIG       0x0C
+#define SUBTAG_REF           0x10
+#define SUBTAG_REFC_BINARY   0x14
+#define SUBTAG_HEAP_BINARY   0x18
+
+#define ETERM_NIL ((0x0F << 2) | TAG_PRIMARY_IMMED1)
 #define ETERM_INVALID ((Eterm)0)
 
 /* Status Codes */
@@ -54,6 +62,18 @@ static_assert(sizeof(Eterm) == sizeof(uintptr_t));
 /* Primitive Helpers */
 static inline bool beam_is_small_int(Eterm term) {
     return (term & 0x0F) == TAG_IMMED1_SMALL_INT;
+}
+
+static inline bool beam_is_atom(Eterm term) {
+    return (term & 0x0F) == TAG_IMMED1_ATOM;
+}
+
+static inline bool beam_is_pid(Eterm term) {
+    return (term & 0x0F) == TAG_IMMED1_PID;
+}
+
+static inline bool beam_is_port(Eterm term) {
+    return (term & 0x0F) == TAG_IMMED1_PORT;
 }
 
 static inline Eterm make_small_int(intptr_t val) {
@@ -101,6 +121,35 @@ static inline Eterm beam_list_tail(Eterm term) {
     Eterm* ptr = (Eterm*)(term & ~((uintptr_t)0x03));
     return ptr[1];
 }
+
+static inline bool beam_is_float(Eterm term) {
+    if ((term & 0x03) != TAG_PRIMARY_BOXED) return false;
+    Eterm* ptr = (Eterm*)(term & ~((uintptr_t)0x03));
+    return ptr && ((*ptr & 0x3F) == SUBTAG_FLOAT);
+}
+
+static inline bool beam_is_big_int(Eterm term) {
+    if ((term & 0x03) != TAG_PRIMARY_BOXED) return false;
+    Eterm* ptr = (Eterm*)(term & ~((uintptr_t)0x03));
+    if (!ptr) return false;
+    uintptr_t sub = *ptr & 0x3F;
+    return (sub == SUBTAG_POS_BIG) || (sub == SUBTAG_NEG_BIG);
+}
+
+static inline bool beam_is_ref(Eterm term) {
+    if ((term & 0x03) != TAG_PRIMARY_BOXED) return false;
+    Eterm* ptr = (Eterm*)(term & ~((uintptr_t)0x03));
+    return ptr && ((*ptr & 0x3F) == SUBTAG_REF);
+}
+
+static inline bool beam_is_binary(Eterm term) {
+    if ((term & 0x03) != TAG_PRIMARY_BOXED) return false;
+    Eterm* ptr = (Eterm*)(term & ~((uintptr_t)0x03));
+    if (!ptr) return false;
+    uintptr_t sub = *ptr & 0x3F;
+    return (sub == SUBTAG_REFC_BINARY) || (sub == SUBTAG_HEAP_BINARY);
+}
+
 
 /* Opaque Context Forward Declarations */
 typedef struct beam_context beam_context_t;

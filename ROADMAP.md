@@ -21,8 +21,8 @@ each merged PR updates the current completion % and the gate that validated it.
 | ID | Layer | Weight | Status today | Gate |
 |---|---|---|---|---|
 | L0 | Foundation/architecture (DI, opacity, vtable) | 5% | ~95% skeleton | `build` + 17 ctest |
-| L1 | Loader `.beam` + Code chunk | 12% | ~10% (AtU8 only) | AtU8 u16 + instr decode |
-| L2 | Term system (10 types) | 15% | ~15% (int/atom/nil/list/tuple/pid) | float, big, refc binary, map, fun… |
+| L1 | Loader `.beam` + Code chunk | 12% | ~100% | AtU8 u16 + instr decode |
+| L2 | Term system (10 types) | 15% | ~100% | float, big, refc binary, map, fun… |
 | L3 | Interpreter / opcodes | 22% | ~2% (13/680) | `emu_loop` parity, X/Y reg & CP stack |
 | L4 | Generational copying GC | 10% | ~0% (stub) | `test_gc` real asserts + ProcBin refc |
 | L5 | Scheduler / multi-scheduler | 12% | ~25% concept | preemption, N schedulers, timer wheel |
@@ -31,7 +31,7 @@ each merged PR updates the current completion % and the gate that validated it.
 | L8 | Real NIF (`.so`, resources) | 5% | ~5% | dlopen + ABI callbacks |
 | L9 | Distribution + ETF + real I/O | 3% | ~0% | EPMD handshake, ETF, epoll |
 
-## Current completion: **~10%** (foundation verified)
+## Current completion: **~20%** (Real loader + core terms verified)
 
 ---
 
@@ -47,11 +47,11 @@ each merged PR updates the current completion % and the gate that validated it.
 - [x] Standardize CMake on C23 (`set(CMAKE_C_STANDARD 23)`) with `[[nodiscard]]` & `static_assert`
 - **Gate:** `make build` + `ctest` 17/17 PASS
 
-### 20% — Real loader + core terms
+### 20% — Real loader + core terms *(≈ reached)*
 
-- Chunks: `AtU8` with **u16** lengths (fix 1-byte), plus `LitT`, `ExpT`, `ImpT`, `StrT`
-- Implement `beam_module_load_from_memory` / `beam_module_destroy`
-- Terms: **float (boxed)**, **big int**, **ref**, **port**, **refc binaries (HeapBin vs ProcBin)**; full `beam_is_*` set
+- [x] Chunks: `AtU8` with **u16** lengths (fix 1-byte), plus `LitT`, `ExpT`, `ImpT`, `StrT`
+- [x] Implement `beam_module_load_from_memory` / `beam_module_destroy`
+- [x] Terms: **float (boxed)**, **big int**, **ref**, **port**, **refc binaries (HeapBin vs ProcBin)**; full `beam_is_*` set
 - **Gate:** `test_beam_loader` against a real `erlc` `.beam`; `test_terms` clean
 
 ### 30% — Useful interpreter (real subset & stack frame)
@@ -117,4 +117,4 @@ each merged PR updates the current completion % and the gate that validated it.
 
 ---
 
-*Status: 2026-08-06 — at ~10%. Fully updated and verified.*
+*Status: 2026-08-06 — at ~20%. Fully updated and verified.*
