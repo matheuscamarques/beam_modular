@@ -20,13 +20,25 @@ Record EmulatorFrame : Type := {
 Inductive Opcode : Type :=
   | OpMove : Eterm -> Z -> Opcode
   | OpAdd : Z -> Z -> Z -> Opcode
+  | OpAllocate : Z -> Opcode
+  | OpDeallocate : Z -> Opcode
   | OpHalt : Opcode.
 
 Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame :=
   match op with
+  | OpAllocate n => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) - n |}
+  | OpDeallocate n => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) + n |}
   | OpHalt => frame
   | _ => frame
   end.
+
+Theorem allocate_deallocate_stack_invariant : forall (n : Z) (f : EmulatorFrame),
+  (execute_opcode (OpDeallocate n) (execute_opcode (OpAllocate n) f)).(sp) = f.(sp).
+Proof.
+  intros n f.
+  simpl.
+  ring.
+Qed.
 
 Theorem opcode_execution_deterministic : forall (op : Opcode) (f f1 f2 : EmulatorFrame),
   execute_opcode op f = f1 -> execute_opcode op f = f2 -> f1 = f2.
