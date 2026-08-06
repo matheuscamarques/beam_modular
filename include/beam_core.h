@@ -7,7 +7,7 @@
 
 /**
  * @file beam_core.h
- * @brief Public Opaque Interface for Core Eterm Tagging, Loader, and Code Server.
+ * @brief Public Opaque Interface for Core Eterm Tagging, Loader, Code Server, and VM Orchestrator.
  */
 
 typedef uintptr_t Eterm;
@@ -96,5 +96,11 @@ void beam_code_server_destroy(beam_code_server_t* cs);
 beam_result_t beam_code_server_register_module(beam_code_server_t* cs, const char* mod_name, beam_file_t* file);
 beam_file_t* beam_code_server_lookup_module(const beam_code_server_t* cs, const char* mod_name);
 size_t beam_code_server_module_count(const beam_code_server_t* cs);
+
+/* Full VM Orchestrator API */
+beam_context_t* beam_vm_create(const beam_allocator_i* alloc);
+void beam_vm_destroy(beam_context_t* ctx);
+
+beam_code_server_t* beam_vm_get_code_server(const beam_context_t* ctx);
 
 #endif /* BEAM_CORE_H */
