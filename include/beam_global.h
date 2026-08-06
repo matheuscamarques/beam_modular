@@ -29,6 +29,7 @@ void beam_ets_table_destroy(beam_ets_table_t* ets);
 BEAM_NODISCARD beam_result_t beam_ets_insert(beam_ets_table_t* ets, Eterm key, Eterm value);
 BEAM_NODISCARD beam_result_t beam_ets_lookup(const beam_ets_table_t* ets, Eterm key, Eterm* out_value);
 BEAM_NODISCARD beam_result_t beam_ets_delete(beam_ets_table_t* ets, Eterm key);
+BEAM_NODISCARD beam_result_t beam_ets_update_counter(beam_ets_table_t* ets, Eterm key, intptr_t increment, Eterm* out_new_value);
 size_t beam_ets_count(const beam_ets_table_t* ets);
 
 /* Distributed Erlang Node Table Operations */

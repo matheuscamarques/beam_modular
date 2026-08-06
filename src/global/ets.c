@@ -123,3 +123,24 @@ beam_result_t beam_ets_delete(beam_ets_table_t* table, Eterm key) {
 size_t beam_ets_count(const beam_ets_table_t* table) {
     return table ? table->item_count : 0;
 }
+
+beam_result_t beam_ets_update_counter(beam_ets_table_t* table, Eterm key, intptr_t increment, Eterm* out_new_value) {
+    if (!table || !out_new_value) return BEAM_ERR_INVALID_ARG;
+
+    uint32_t hash = hash_eterm(key);
+    size_t idx = hash % table->bucket_count;
+
+    ets_entry_t* entry = table->buckets[idx];
+    while (entry) {
+        if (entry->key == key) {
+            intptr_t curr_val = eterm_to_small_int(entry->value);
+            intptr_t new_val = curr_val + increment;
+            entry->value = make_small_int(new_val);
+            *out_new_value = entry->value;
+            return BEAM_OK;
+        }
+        entry = entry->next;
+    }
+
+    return BEAM_ERR_NOT_FOUND;
+}

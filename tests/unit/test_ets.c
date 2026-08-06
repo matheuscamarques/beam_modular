@@ -50,6 +50,17 @@ void test_ets_table(void) {
 
     res = beam_ets_lookup(ets, key1, &out_val);
     assert(res == BEAM_ERR_NOT_FOUND);
+
+    /* Test ETS update counter */
+    Eterm counter_key = beam_atom_intern(atoms, "request_count");
+    res = beam_ets_insert(ets, counter_key, make_small_int(100));
+    assert(res == BEAM_OK);
+
+    Eterm new_counter = 0;
+    res = beam_ets_update_counter(ets, counter_key, 5, &new_counter);
+    assert(res == BEAM_OK);
+    assert(eterm_to_small_int(new_counter) == 105);
+
     (void)res;
 
     beam_ets_table_destroy(ets);
