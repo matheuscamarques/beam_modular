@@ -2,6 +2,7 @@
 #define ERL_PROCESS_INTERNAL_H
 
 #include "beam_scheduler.h"
+#include "beam_messaging.h"
 
 #define BEAM_DEFAULT_REDUCTIONS 4000
 
@@ -15,6 +16,9 @@ struct beam_process {
     size_t heap_capacity;
     size_t heap_top;
     
+    /* Mailbox */
+    beam_mailbox_t* mailbox;
+
     beam_allocator_i alloc;
 };
 

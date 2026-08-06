@@ -22,4 +22,8 @@ beam_result_t beam_mailbox_enqueue(beam_mailbox_t* mbox, Eterm msg);
 beam_result_t beam_mailbox_dequeue(beam_mailbox_t* mbox, Eterm* out_msg);
 size_t beam_mailbox_count(const beam_mailbox_t* mbox);
 
+/* Process-to-Process Message Delivery */
+beam_result_t beam_message_send_to_process(beam_process_t* receiver, Eterm msg, const beam_allocator_i* alloc);
+beam_result_t beam_process_receive_message(beam_process_t* proc, Eterm* out_msg);
+
 #endif /* BEAM_MESSAGING_H */

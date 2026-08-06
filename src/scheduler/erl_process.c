@@ -23,12 +23,23 @@ beam_process_t* beam_process_create(uint32_t pid, size_t initial_heap_words, con
     proc->heap_capacity = capacity;
     proc->heap_top = 0;
 
+    proc->mailbox = beam_mailbox_create(alloc);
+    if (!proc->mailbox) {
+        alloc->free(alloc->ctx, proc->heap);
+        alloc->free(alloc->ctx, proc);
+        return NULL;
+    }
+
     return proc;
 }
 
 void beam_process_destroy(beam_process_t* proc) {
     if (!proc) return;
     beam_allocator_i alloc = proc->alloc;
+
+    if (proc->mailbox) {
+        beam_mailbox_destroy(proc->mailbox);
+    }
     if (proc->heap) {
         alloc.free(alloc.ctx, proc->heap);
     }
@@ -65,6 +76,10 @@ void beam_process_consume_reductions(beam_process_t* proc, int count) {
     }
 }
 
+beam_mailbox_t* beam_process_get_mailbox(beam_process_t* proc) {
+    return proc ? proc->mailbox : NULL;
+}
+
 Eterm* beam_process_alloc_heap(beam_process_t* proc, size_t needed_words) {
     if (!proc) return NULL;
 
@@ -96,7 +111,6 @@ Eterm beam_make_tuple(beam_process_t* proc, size_t arity, const Eterm* elements)
     Eterm* hp = beam_process_alloc_heap(proc, arity + 1);
     if (!hp) return ETERM_INVALID;
 
-    /* Word 0: Header = (arity << 6) | SUBTAG_TUPLE */
     hp[0] = (Eterm)((arity << 6) | SUBTAG_TUPLE);
 
     if (elements && arity > 0) {

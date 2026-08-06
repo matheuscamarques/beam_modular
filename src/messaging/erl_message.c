@@ -66,3 +66,16 @@ beam_result_t beam_mailbox_dequeue(beam_mailbox_t* mbox, Eterm* out_msg) {
 size_t beam_mailbox_count(const beam_mailbox_t* mbox) {
     return mbox ? mbox->count : 0;
 }
+
+beam_result_t beam_message_send_to_process(beam_process_t* receiver, Eterm msg, const beam_allocator_i* alloc) {
+    beam_mailbox_t* mbox = beam_process_get_mailbox(receiver);
+    if (!mbox) return BEAM_ERR_INVALID_ARG;
+    (void)alloc;
+    return beam_mailbox_enqueue(mbox, msg);
+}
+
+beam_result_t beam_process_receive_message(beam_process_t* proc, Eterm* out_msg) {
+    beam_mailbox_t* mbox = beam_process_get_mailbox(proc);
+    if (!mbox) return BEAM_ERR_INVALID_ARG;
+    return beam_mailbox_dequeue(mbox, out_msg);
+}

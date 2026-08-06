@@ -12,6 +12,7 @@
 typedef struct beam_process beam_process_t;
 typedef struct beam_run_queue beam_run_queue_t;
 typedef struct beam_scheduler beam_scheduler_t;
+typedef struct beam_mailbox beam_mailbox_t;
 
 typedef enum {
     BEAM_PROC_STATE_RUNNABLE,
@@ -39,6 +40,7 @@ void beam_process_set_state(beam_process_t* proc, beam_process_state_t state);
 int beam_process_get_reductions(const beam_process_t* proc);
 void beam_process_set_reductions(beam_process_t* proc, int reductions);
 void beam_process_consume_reductions(beam_process_t* proc, int count);
+beam_mailbox_t* beam_process_get_mailbox(beam_process_t* proc);
 
 /* Heap allocation on Process Private Heap */
 Eterm* beam_process_alloc_heap(beam_process_t* proc, size_t needed_words);
