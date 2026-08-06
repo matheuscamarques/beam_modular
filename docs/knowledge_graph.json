@@ -1,0 +1,348 @@
+{
+  "commit": "924fb207e2eb01de85adf2bf3ca093387235e906",
+  "language": "C23",
+  "standard": "ISO C23 (-std=c23)",
+  "modules": [
+    "emulator",
+    "scheduler",
+    "memory",
+    "messaging",
+    "global",
+    "io",
+    "utils"
+  ],
+  "supported_opcodes_count": 20,
+  "supported_opcodes": [
+    "BEAM_OP_LABEL",
+    "BEAM_OP_MOVE",
+    "BEAM_OP_ADD",
+    "BEAM_OP_SUB",
+    "BEAM_OP_ALLOCATE",
+    "BEAM_OP_DEALLOCATE",
+    "BEAM_OP_CALL",
+    "BEAM_OP_RETURN",
+    "BEAM_OP_SEND",
+    "BEAM_OP_RECEIVE",
+    "BEAM_OP_MATCH_TUPLE",
+    "BEAM_OP_GET_TUPLE_ELEMENT",
+    "BEAM_OP_TEST_IS_EQ_EXACT",
+    "BEAM_OP_TEST_IS_NE_EXACT",
+    "BEAM_OP_TEST_IS_TUPLE",
+    "BEAM_OP_TEST_IS_LIST",
+    "BEAM_OP_GET_LIST",
+    "BEAM_OP_SELECT_VAL",
+    "BEAM_OP_CALL_EXT",
+    "BEAM_OP_HALT"
+  ],
+  "dependencies": [
+    {
+      "source": "scheduler/erl_process.c",
+      "target": "erl_process_internal.h"
+    },
+    {
+      "source": "scheduler/erl_process.c",
+      "target": "string.h"
+    },
+    {
+      "source": "scheduler/run_queue.c",
+      "target": "run_queue_internal.h"
+    },
+    {
+      "source": "scheduler/run_queue.c",
+      "target": "string.h"
+    },
+    {
+      "source": "scheduler/beam_scheduler_loop_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "scheduler/run_queue_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "scheduler/erl_process_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "scheduler/erl_process_internal.h",
+      "target": "beam_messaging.h"
+    },
+    {
+      "source": "scheduler/erl_process_internal.h",
+      "target": "beam_emu_internal.h"
+    },
+    {
+      "source": "scheduler/beam_scheduler_loop.c",
+      "target": "beam_scheduler_loop_internal.h"
+    },
+    {
+      "source": "scheduler/beam_scheduler_loop.c",
+      "target": "beam_emu_internal.h"
+    },
+    {
+      "source": "scheduler/beam_scheduler_loop.c",
+      "target": "string.h"
+    },
+    {
+      "source": "emulator/beam_emu.c",
+      "target": "beam_emu_internal.h"
+    },
+    {
+      "source": "emulator/beam_emu.c",
+      "target": "beam_bif_internal.h"
+    },
+    {
+      "source": "emulator/beam_emu.c",
+      "target": "../scheduler/erl_process_internal.h"
+    },
+    {
+      "source": "emulator/beam_emu.c",
+      "target": "stdio.h"
+    },
+    {
+      "source": "emulator/beam_emu.c",
+      "target": "string.h"
+    },
+    {
+      "source": "emulator/beam_code_server_internal.h",
+      "target": "beam_core.h"
+    },
+    {
+      "source": "emulator/beam_code_server_internal.h",
+      "target": "beam_memory.h"
+    },
+    {
+      "source": "emulator/beam_code_server_internal.h",
+      "target": "beam_load_internal.h"
+    },
+    {
+      "source": "emulator/beam_emu_internal.h",
+      "target": "beam_core.h"
+    },
+    {
+      "source": "emulator/beam_emu_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "emulator/beam_emu_internal.h",
+      "target": "beam_messaging.h"
+    },
+    {
+      "source": "emulator/beam_bif_internal.h",
+      "target": "beam_core.h"
+    },
+    {
+      "source": "emulator/beam_bif_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "emulator/beam_code_server.c",
+      "target": "beam_code_server_internal.h"
+    },
+    {
+      "source": "emulator/beam_code_server.c",
+      "target": "string.h"
+    },
+    {
+      "source": "emulator/beam_load_internal.h",
+      "target": "beam_core.h"
+    },
+    {
+      "source": "emulator/beam_load_internal.h",
+      "target": "beam_memory.h"
+    },
+    {
+      "source": "emulator/beam_load_internal.h",
+      "target": "stdint.h"
+    },
+    {
+      "source": "emulator/beam_load_internal.h",
+      "target": "stddef.h"
+    },
+    {
+      "source": "emulator/beam_bif.c",
+      "target": "beam_bif_internal.h"
+    },
+    {
+      "source": "emulator/beam_load.c",
+      "target": "beam_load_internal.h"
+    },
+    {
+      "source": "emulator/beam_load.c",
+      "target": "string.h"
+    },
+    {
+      "source": "emulator/beam_decode.c",
+      "target": "beam_emu_internal.h"
+    },
+    {
+      "source": "emulator/beam_decode.c",
+      "target": "beam_opcodes_arity.h"
+    },
+    {
+      "source": "emulator/beam_decode.c",
+      "target": "string.h"
+    },
+    {
+      "source": "core/beam_main_internal.h",
+      "target": "beam_core.h"
+    },
+    {
+      "source": "core/beam_main_internal.h",
+      "target": "beam_memory.h"
+    },
+    {
+      "source": "core/beam_main_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "core/beam_main_internal.h",
+      "target": "beam_messaging.h"
+    },
+    {
+      "source": "core/beam_main_internal.h",
+      "target": "beam_global.h"
+    },
+    {
+      "source": "core/beam_main_internal.h",
+      "target": "beam_io.h"
+    },
+    {
+      "source": "core/beam_vm.c",
+      "target": "beam_main_internal.h"
+    },
+    {
+      "source": "core/beam_vm.c",
+      "target": "string.h"
+    },
+    {
+      "source": "core/beam_main.c",
+      "target": "stdio.h"
+    },
+    {
+      "source": "core/beam_main.c",
+      "target": "beam_core.h"
+    },
+    {
+      "source": "core/beam_main.c",
+      "target": "beam_memory.h"
+    },
+    {
+      "source": "memory/beam_alloc_internal.h",
+      "target": "beam_memory.h"
+    },
+    {
+      "source": "memory/beam_alloc_internal.h",
+      "target": "stdint.h"
+    },
+    {
+      "source": "memory/beam_alloc_internal.h",
+      "target": "stddef.h"
+    },
+    {
+      "source": "memory/beam_alloc.c",
+      "target": "beam_alloc_internal.h"
+    },
+    {
+      "source": "memory/beam_alloc.c",
+      "target": "stdlib.h"
+    },
+    {
+      "source": "memory/beam_alloc.c",
+      "target": "string.h"
+    },
+    {
+      "source": "memory/beam_gc_internal.h",
+      "target": "beam_memory.h"
+    },
+    {
+      "source": "memory/beam_gc_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "memory/beam_gc.c",
+      "target": "beam_gc_internal.h"
+    },
+    {
+      "source": "memory/beam_gc.c",
+      "target": "string.h"
+    },
+    {
+      "source": "messaging/erl_message.c",
+      "target": "erl_message_internal.h"
+    },
+    {
+      "source": "messaging/erl_message.c",
+      "target": "string.h"
+    },
+    {
+      "source": "messaging/erl_message_internal.h",
+      "target": "beam_messaging.h"
+    },
+    {
+      "source": "messaging/erl_message_internal.h",
+      "target": "beam_scheduler.h"
+    },
+    {
+      "source": "global/dist_node.c",
+      "target": "dist_node_internal.h"
+    },
+    {
+      "source": "global/dist_node.c",
+      "target": "string.h"
+    },
+    {
+      "source": "global/ets.c",
+      "target": "ets_internal.h"
+    },
+    {
+      "source": "global/ets.c",
+      "target": "string.h"
+    },
+    {
+      "source": "global/dist_node_internal.h",
+      "target": "beam_global.h"
+    },
+    {
+      "source": "global/ets_internal.h",
+      "target": "beam_global.h"
+    },
+    {
+      "source": "global/atom_table.c",
+      "target": "beam_global.h"
+    },
+    {
+      "source": "global/atom_table.c",
+      "target": "string.h"
+    },
+    {
+      "source": "io/sys_poll.c",
+      "target": "sys_poll_internal.h"
+    },
+    {
+      "source": "io/sys_poll.c",
+      "target": "string.h"
+    },
+    {
+      "source": "io/erl_nif_internal.h",
+      "target": "beam_io.h"
+    },
+    {
+      "source": "io/erl_nif.c",
+      "target": "erl_nif_internal.h"
+    },
+    {
+      "source": "io/erl_nif.c",
+      "target": "string.h"
+    },
+    {
+      "source": "io/sys_poll_internal.h",
+      "target": "beam_io.h"
+    }
+  ],
+  "architecture_notes": {
+    "memory_model": "32-bit tagged Eterm immediate & heap pointer encoding",
+    "state_persistence": "beam_emulator_frame_t embedded directly in beam_process_t PCB for preemptive scheduler safety",
+    "loader_fix": "AtU8 chunk num_atoms parsed as signed 32-bit int (-NumAtoms) to prevent 34GB OOM"
+  }
+}
