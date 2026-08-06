@@ -5,12 +5,17 @@
 #include "beam_scheduler.h"
 
 #define BEAM_NUM_X_REGISTERS 16
+#define BEAM_MAX_STACK_WORDS 256
 
 typedef enum {
     BEAM_OP_LABEL = 1,
     BEAM_OP_MOVE,
     BEAM_OP_ADD,
     BEAM_OP_SUB,
+    BEAM_OP_ALLOCATE,
+    BEAM_OP_DEALLOCATE,
+    BEAM_OP_CALL,
+    BEAM_OP_RETURN,
     BEAM_OP_HALT
 } beam_opcode_t;
 
@@ -22,10 +27,13 @@ struct beam_instruction {
     Eterm literal;
 };
 
-/* Internal register state per process execution frame */
+/* Internal register and stack state per process execution frame */
 typedef struct {
     Eterm x_regs[BEAM_NUM_X_REGISTERS];
-} beam_emulator_registers_t;
+    Eterm stack[BEAM_MAX_STACK_WORDS];
+    int sp; /* Stack pointer index */
+    uint32_t cp; /* Continuation pointer (return instruction address) */
+} beam_emulator_frame_t;
 
 beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction_t* code, size_t code_len, Eterm* out_result);
 

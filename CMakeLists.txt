@@ -27,7 +27,7 @@ target_include_directories(beam_memory_mod PRIVATE src/memory)
 add_library(beam_scheduler_mod STATIC src/scheduler/erl_process.c)
 target_include_directories(beam_scheduler_mod PRIVATE src/scheduler)
 
-add_library(beam_emulator_mod STATIC src/emulator/beam_emu.c src/emulator/beam_bif.c)
+add_library(beam_emulator_mod STATIC src/emulator/beam_emu.c src/emulator/beam_bif.c src/emulator/beam_load.c)
 target_include_directories(beam_emulator_mod PRIVATE src/emulator)
 
 add_library(beam_messaging_mod STATIC src/messaging/erl_message.c)
@@ -45,6 +45,10 @@ target_link_libraries(beam_core_bin PRIVATE beam_memory_mod beam_scheduler_mod b
 
 # Unit Tests
 enable_testing()
+
+add_executable(test_beam_loader tests/unit/test_beam_loader.c)
+target_link_libraries(test_beam_loader PRIVATE beam_emulator_mod beam_mocks)
+add_test(NAME test_beam_loader COMMAND test_beam_loader)
 
 add_executable(test_terms tests/unit/test_terms.c)
 target_link_libraries(test_terms PRIVATE beam_scheduler_mod beam_mocks)

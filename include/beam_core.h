@@ -11,6 +11,7 @@
  */
 
 typedef struct beam_process beam_process_t;
+typedef struct beam_allocator_i beam_allocator_i;
 
 /* Eterm primitive type: tagged word in Erlang VM */
 typedef uintptr_t Eterm;
@@ -70,7 +71,8 @@ typedef enum {
     BEAM_ERR_ALREADY_EXISTS = -4,
     BEAM_ERR_TIMEOUT = -5,
     BEAM_ERR_BADARG = -6,
-    BEAM_ERR_HALT = -7
+    BEAM_ERR_HALT = -7,
+    BEAM_ERR_BAD_FILE = -8
 } beam_result_t;
 
 /* Opaque Context Structure for global runtime instance */
@@ -89,5 +91,14 @@ size_t beam_tuple_arity(Eterm term);
 Eterm beam_tuple_element(Eterm term, size_t index);
 Eterm beam_list_head(Eterm term);
 Eterm beam_list_tail(Eterm term);
+
+/* Opaque BEAM Binary File Parser */
+typedef struct beam_file beam_file_t;
+
+beam_file_t* beam_file_parse(const uint8_t* buffer, size_t size, const beam_allocator_i* alloc);
+const char* beam_file_get_module_name(const beam_file_t* beam);
+size_t beam_file_get_atom_count(const beam_file_t* beam);
+const char* beam_file_get_atom(const beam_file_t* beam, size_t index);
+void beam_file_destroy(beam_file_t* beam);
 
 #endif /* BEAM_CORE_H */
