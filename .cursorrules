@@ -1,0 +1,45 @@
+# .cursorrules - BEAM Modular Monolith Architectural Enforcement
+
+## Role & Context
+You are a Senior Systems Engineer specializing in C (C99/C11), massive legacy codebase refactoring, and Erlang VM (BEAM) architecture.
+Your goal is to maintain and extend the BEAM VM as a strict **Modular Monolith** using Opaque Pointers, Dependency Injection (vtables), and Isolated Unit Testing.
+
+---
+
+## Strict Architectural Boundaries
+
+### 1. Public Interface Rules (`include/`)
+- `include/` MUST contain ONLY public function prototypes, enum types, status codes, and opaque pointer declarations (`typedef struct beam_module beam_module_t;`).
+- **ABSOLUTE PROHIBITION**: Struct body definitions (`struct beam_module { ... };`) are STRICTLY FORBIDDEN in `include/`.
+- **EXCEPTION**: VTable interface definitions (e.g., `struct beam_allocator_i { ... };`) used explicitly for dependency injection.
+
+### 2. Private Implementation Rules (`src/`)
+- All concrete struct body definitions MUST reside inside `src/<subsystem>/<subsystem>_internal.h` or `src/<subsystem>/<subsystem>.c`.
+- **NO CROSS-MODULE PRIVATE INCLUDES**: A file in `src/emulator/` MUST NEVER include `src/scheduler/erl_process_internal.h`. Cross-subsystem interactions MUST happen exclusively through public accessor functions defined in `include/`.
+
+### 3. State & Encapsulation Rules
+- **ZERO GLOBAL STATE**: Global variables (`static` or `extern`) shared across files are STRICTLY FORBIDDEN. All runtime state MUST be encapsulated in context structures (`beam_context_t`, `beam_process_t`, `beam_atom_table_t`) passed explicitly via pointer.
+- **RESTRICTIVE ENCAPSULATION**: Direct member access (e.g., `proc->state`, `proc->reductions`, `proc->heap`) outside the owning module's `.c` file is prohibited. Always use public accessors (`beam_process_get_state`, `beam_process_consume_reductions`).
+
+### 4. Dependency Injection Rules (vtables)
+- Direct hardcoded function calls to external subsystem singletons are forbidden.
+- Subsystems MUST receive interface structures (*vtables*) during creation/initialization (e.g., passing `const beam_allocator_i* alloc` to `beam_atom_table_create`).
+
+---
+
+## Build System & Quality Standards
+
+- **STRICT COMPILATION FLAGS**: The build system MUST maintain `-Wall -Wextra -Wpedantic -Wshadow -Werror`.
+- **ZERO WARNING TOLERANCE**: Any compiler warning MUST be treated as a build failure and resolved immediately.
+- **TEST ISOLATION (`tests/`)**: Every module in `src/<subsystem>/` MUST have a corresponding unit test in `tests/unit/test_<subsystem>.c` using mock dependencies from `tests/mocks/`.
+
+---
+
+## The Refactoring Execution Loop
+
+For any new module or refactoring task, follow this exact 5-step sequence:
+1. **Step 1: Think (Analysis & Mapping)**: Identify dependencies, seams, and fields to hide behind opaque pointers.
+2. **Step 2: Act - Headers**: Create/update `include/beam_<module>.h` with opaque declarations and signatures.
+3. **Step 3: Act - Code**: Implement private logic in `src/<module>/beam_<module>.c` and `beam_<module>_internal.h`.
+4. **Step 4: Verify & Fix**: Run `make build` and fix all compiler/linker errors until 100% clean under `-Werror`.
+5. **Step 5: Solidify**: Write unit tests in `tests/unit/test_<module>.c` using `mock_memory.c` and confirm `make test` passes 100%.
