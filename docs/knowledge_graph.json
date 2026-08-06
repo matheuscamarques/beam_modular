@@ -1,5 +1,5 @@
 {
-  "commit": "c8398e647fc0cce1c15b236720dc944075b07574",
+  "commit": "8b36a50659e51cfa2b5bfa4b42509fb789d519df",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -340,9 +340,17 @@
       "target": "beam_io.h"
     }
   ],
+  "formal_verification": {
+    "coq_rocq": "formal/coq/beam_emu_spec.v",
+    "tla_plus": "formal/tla/beam_scheduler.tla",
+    "smt_z3": "formal/smt/z3_bounds_check.py",
+    "agda": "formal/agda/BEAMTerms.agda",
+    "framac_acsl": "formal/framac/beam_acsl_spec.h"
+  },
   "architecture_notes": {
     "memory_model": "32-bit tagged Eterm immediate & heap pointer encoding",
     "state_persistence": "beam_emulator_frame_t embedded directly in beam_process_t PCB for preemptive scheduler safety",
-    "loader_fix": "AtU8 chunk num_atoms parsed as signed 32-bit int (-NumAtoms) to prevent 34GB OOM"
+    "loader_fix": "AtU8 chunk num_atoms parsed as signed 32-bit int (-NumAtoms) to prevent 34GB OOM",
+    "formal_proofs": "Coq (determinism), TLA+ (liveness), SMT/Z3 (memory isolation), Agda (type theory), Frama-C (C23 contracts)"
   }
 }

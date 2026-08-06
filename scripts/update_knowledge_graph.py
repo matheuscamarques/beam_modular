@@ -58,6 +58,14 @@ def generate_knowledge_graph():
     
     modules = ["emulator", "scheduler", "memory", "messaging", "global", "io", "utils"]
     
+    formal_specs = {
+        "coq_rocq": "formal/coq/beam_emu_spec.v",
+        "tla_plus": "formal/tla/beam_scheduler.tla",
+        "smt_z3": "formal/smt/z3_bounds_check.py",
+        "agda": "formal/agda/BEAMTerms.agda",
+        "framac_acsl": "formal/framac/beam_acsl_spec.h"
+    }
+
     graph_data = {
         "commit": commit,
         "language": "C23",
@@ -66,10 +74,12 @@ def generate_knowledge_graph():
         "supported_opcodes_count": len(opcodes),
         "supported_opcodes": opcodes,
         "dependencies": dependencies,
+        "formal_verification": formal_specs,
         "architecture_notes": {
             "memory_model": "32-bit tagged Eterm immediate & heap pointer encoding",
             "state_persistence": "beam_emulator_frame_t embedded directly in beam_process_t PCB for preemptive scheduler safety",
-            "loader_fix": "AtU8 chunk num_atoms parsed as signed 32-bit int (-NumAtoms) to prevent 34GB OOM"
+            "loader_fix": "AtU8 chunk num_atoms parsed as signed 32-bit int (-NumAtoms) to prevent 34GB OOM",
+            "formal_proofs": "Coq (determinism), TLA+ (liveness), SMT/Z3 (memory isolation), Agda (type theory), Frama-C (C23 contracts)"
         }
     }
     
