@@ -15,6 +15,11 @@ struct beam_file {
     beam_allocator_i alloc;
 };
 
+struct beam_module {
+    beam_file_t* file;
+    beam_allocator_i alloc;
+};
+
 beam_file_t* beam_file_parse(const uint8_t* buffer, size_t size, const beam_allocator_i* alloc);
 const char* beam_file_get_module_name(const beam_file_t* beam);
 size_t beam_file_get_atom_count(const beam_file_t* beam);

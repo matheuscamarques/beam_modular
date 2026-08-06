@@ -35,6 +35,7 @@ typedef uintptr_t Eterm;
 #define SUBTAG_TUPLE        0x00
 
 #define ETERM_NIL (0x0F << 2 | TAG_PRIMARY_IMMED1)
+#define ETERM_INVALID ((Eterm)0)
 
 /* Status Codes */
 typedef enum {
@@ -83,6 +84,10 @@ static inline Eterm beam_tuple_element(Eterm term, size_t index) {
 
 static inline bool beam_is_list(Eterm term) {
     return (term & 0x03) == TAG_PRIMARY_LIST;
+}
+
+static inline bool beam_is_nil(Eterm term) {
+    return term == ETERM_NIL;
 }
 
 static inline Eterm beam_list_head(Eterm term) {

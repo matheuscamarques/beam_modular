@@ -8,6 +8,7 @@
 
 #include "beam_core.h"
 #include "beam_memory.h"
+#include "beam_load_internal.h"
 
 /* --- Common protocol: RESULT lines + FNV-1a 64 + time --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;

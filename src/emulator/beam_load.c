@@ -95,3 +95,33 @@ void beam_file_destroy(beam_file_t* beam) {
     }
     alloc.free(alloc.ctx, beam);
 }
+
+beam_module_t* beam_module_load_from_memory(const uint8_t* buffer, size_t size, const beam_allocator_i* alloc) {
+    if (!buffer || !size || !alloc || !alloc->alloc || !alloc->free) {
+        return NULL;
+    }
+
+    beam_module_t* mod = (beam_module_t*)alloc->alloc(alloc->ctx, sizeof(beam_module_t));
+    if (!mod) return NULL;
+
+    memset(mod, 0, sizeof(beam_module_t));
+    mod->alloc = *alloc;
+
+    mod->file = beam_file_parse(buffer, size, alloc);
+    if (!mod->file) {
+        alloc->free(alloc->ctx, mod);
+        return NULL;
+    }
+
+    return mod;
+}
+
+void beam_module_destroy(beam_module_t* mod) {
+    if (!mod) return;
+
+    beam_allocator_i alloc = mod->alloc;
+    if (mod->file) {
+        beam_file_destroy(mod->file);
+    }
+    alloc.free(alloc.ctx, mod);
+}

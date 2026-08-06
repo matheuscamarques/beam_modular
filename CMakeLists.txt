@@ -19,6 +19,33 @@ if(ENABLE_LTO)
     endif()
 endif()
 
+# A/B benchmark drivers (sides B). Enabled via -DENABLE_BENCH=ON.
+option(ENABLE_BENCH "Build A/B benchmark drivers" OFF)
+if(ENABLE_BENCH)
+    add_executable(bench_loader benchmarks/drivers/b/bench_loader.c)
+    target_include_directories(bench_loader PRIVATE src/emulator)
+    target_link_libraries(bench_loader PRIVATE beam_emulator_mod beam_memory_mod)
+
+    add_executable(bench_atom benchmarks/drivers/b/bench_atom.c)
+    target_link_libraries(bench_atom PRIVATE beam_global_mod beam_memory_mod)
+
+    add_executable(bench_ets benchmarks/drivers/b/bench_ets.c)
+    target_link_libraries(bench_ets PRIVATE beam_global_mod beam_memory_mod)
+
+    add_executable(bench_runqueue benchmarks/drivers/b/bench_runqueue.c)
+    target_link_libraries(bench_runqueue PRIVATE beam_scheduler_mod beam_messaging_mod beam_memory_mod)
+
+    add_executable(bench_alloc benchmarks/drivers/b/bench_alloc.c)
+    target_link_libraries(bench_alloc PRIVATE beam_memory_mod)
+
+    add_executable(bench_msg benchmarks/drivers/b/bench_msg.c)
+    target_link_libraries(bench_msg PRIVATE beam_messaging_mod beam_memory_mod)
+
+    add_executable(bench_emu benchmarks/drivers/b/bench_emu.c)
+    target_include_directories(bench_emu PRIVATE src/emulator)
+    target_link_libraries(bench_emu PRIVATE beam_emulator_mod beam_scheduler_mod beam_messaging_mod beam_memory_mod)
+endif()
+
 # Include Public Headers
 include_directories(include)
 

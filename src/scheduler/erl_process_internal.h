@@ -9,6 +9,7 @@
 struct beam_process {
     uint32_t pid;
     beam_process_state_t state;
+    beam_priority_t priority;
     int reductions;
     
     /* Private Heap */

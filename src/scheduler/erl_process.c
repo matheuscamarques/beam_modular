@@ -11,6 +11,7 @@ beam_process_t* beam_process_create(uint32_t pid, size_t initial_heap_words, con
     proc->alloc = *alloc;
     proc->pid = pid;
     proc->state = BEAM_PROC_STATE_RUNNABLE;
+    proc->priority = BEAM_PRIO_NORMAL;
     proc->reductions = BEAM_DEFAULT_REDUCTIONS;
 
     size_t capacity = (initial_heap_words > 0) ? initial_heap_words : 256;
@@ -73,6 +74,22 @@ void beam_process_set_reductions(beam_process_t* proc, int reductions) {
 void beam_process_consume_reductions(beam_process_t* proc, int count) {
     if (proc) {
         proc->reductions -= count;
+    }
+}
+
+beam_priority_t beam_process_get_priority(const beam_process_t* proc) {
+    return proc ? proc->priority : BEAM_PRIO_NORMAL;
+}
+
+void beam_process_set_priority(beam_process_t* proc, beam_priority_t prio) {
+    if (proc) {
+        proc->priority = prio;
+    }
+}
+
+void beam_process_reset_reductions(beam_process_t* proc) {
+    if (proc) {
+        proc->reductions = BEAM_DEFAULT_REDUCTIONS;
     }
 }
 
