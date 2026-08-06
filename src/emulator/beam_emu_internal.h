@@ -13,6 +13,8 @@ typedef enum {
     BEAM_OP_MOVE,
     BEAM_OP_ADD,
     BEAM_OP_SUB,
+    BEAM_OP_MUL,
+    BEAM_OP_INT_DIV,
     BEAM_OP_ALLOCATE,
     BEAM_OP_DEALLOCATE,
     BEAM_OP_CALL,

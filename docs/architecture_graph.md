@@ -1,7 +1,7 @@
 # Architecture & Knowledge Graph
 
-**Last Commit**: `3a71dd05c98847fba5a3d64f5eb16115dc491aff`  
-**Supported Opcodes**: 26  
+**Last Commit**: `0aebdd59e3e48ac4dc3f37d6b404091abf679fb3`  
+**Supported Opcodes**: 28  
 
 ## Component Dependency Graph
 
@@ -21,6 +21,8 @@ graph TD
 - `BEAM_OP_MOVE`
 - `BEAM_OP_ADD`
 - `BEAM_OP_SUB`
+- `BEAM_OP_MUL`
+- `BEAM_OP_INT_DIV`
 - `BEAM_OP_ALLOCATE`
 - `BEAM_OP_DEALLOCATE`
 - `BEAM_OP_CALL`

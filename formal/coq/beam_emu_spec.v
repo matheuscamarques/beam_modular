@@ -20,6 +20,9 @@ Record EmulatorFrame : Type := {
 Inductive Opcode : Type :=
   | OpMove : Eterm -> Z -> Opcode
   | OpAdd : Z -> Z -> Z -> Opcode
+  | OpSub : Z -> Z -> Z -> Opcode
+  | OpMul : Z -> Z -> Z -> Opcode
+  | OpIntDiv : Z -> Z -> Z -> Opcode
   | OpAllocate : Z -> Opcode
   | OpDeallocate : Z -> Opcode
   | OpCallLast : Z -> Z -> Opcode
@@ -42,6 +45,8 @@ Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame 
   | OpLoopRecEnd target => {| x_regs := frame.(x_regs); ip := target; sp := frame.(sp) |}
   | OpRemoveMessage => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
   | OpWait => {| x_regs := frame.(x_regs); ip := frame.(ip); sp := frame.(sp) |}
+  | OpMul r1 r2 dst => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
+  | OpIntDiv r1 r2 dst => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
   | OpHalt => frame
   | _ => frame
   end.

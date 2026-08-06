@@ -21,6 +21,10 @@ void test_opcode_execution(void) {
         { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(10) },
         { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(20) },
         { .opcode = BEAM_OP_ADD,  .arg1 = 0, .arg2 = 1, .arg3 = 0 },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(3) },
+        { .opcode = BEAM_OP_MUL,  .arg1 = 0, .arg2 = 1, .arg3 = 0 }, /* 30 * 3 = 90 */
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(2) },
+        { .opcode = BEAM_OP_INT_DIV, .arg1 = 0, .arg2 = 1, .arg3 = 0 }, /* 90 / 2 = 45 */
         { .opcode = BEAM_OP_HALT }
     };
 
@@ -29,14 +33,14 @@ void test_opcode_execution(void) {
 
     assert(res == BEAM_ERR_HALT);
     (void)res;
-    assert(eterm_to_small_int(result) == 30);
+    assert(eterm_to_small_int(result) == 45);
     assert(beam_process_get_state(proc) == BEAM_PROC_STATE_EXITED);
 
     beam_process_destroy(proc);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] Executed 10 + 20 = %ld cleanly!\n", (long)eterm_to_small_int(result));
+    printf("  [RESULT] Executed (10 + 20) * 3 / 2 = %ld cleanly!\n", (long)eterm_to_small_int(result));
     printf("  [PASSED] test_opcode_execution\n");
 }
 

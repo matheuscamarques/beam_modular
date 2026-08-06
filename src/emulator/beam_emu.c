@@ -71,6 +71,31 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 break;
             }
 
+            case BEAM_OP_MUL: {
+                uint32_t r1 = instr->arg1;
+                uint32_t r2 = instr->arg2;
+                uint32_t dst = instr->arg3;
+                if (r1 < BEAM_NUM_X_REGISTERS && r2 < BEAM_NUM_X_REGISTERS && dst < BEAM_NUM_X_REGISTERS) {
+                    intptr_t v1 = eterm_to_small_int(frame->x_regs[r1]);
+                    intptr_t v2 = eterm_to_small_int(frame->x_regs[r2]);
+                    frame->x_regs[dst] = make_small_int(v1 * v2);
+                }
+                break;
+            }
+
+            case BEAM_OP_INT_DIV: {
+                uint32_t r1 = instr->arg1;
+                uint32_t r2 = instr->arg2;
+                uint32_t dst = instr->arg3;
+                if (r1 < BEAM_NUM_X_REGISTERS && r2 < BEAM_NUM_X_REGISTERS && dst < BEAM_NUM_X_REGISTERS) {
+                    intptr_t v1 = eterm_to_small_int(frame->x_regs[r1]);
+                    intptr_t v2 = eterm_to_small_int(frame->x_regs[r2]);
+                    if (v2 == 0) return BEAM_ERR_BADARG; /* Badarith / Division by zero error */
+                    frame->x_regs[dst] = make_small_int(v1 / v2);
+                }
+                break;
+            }
+
             case BEAM_OP_ALLOCATE: {
                 uint32_t words = instr->arg1;
                 /* Save CP onto unified stack */
