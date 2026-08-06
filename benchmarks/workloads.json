@@ -1,0 +1,45 @@
+{
+  "_comment": "Catalogo de workloads A/B. 'module' = driver Erlang (lado A), 'bin' = driver C (lado B). RESULT eh a serializacao canonica que ambos os lados devem produzir byte-a-byte (paridade = gate duro).",
+  "loader": {
+    "module": "loader",
+    "bin": "bench_loader",
+    "args": ["sample_module.beam"],
+    "desc": "Paridade pura: parse do mesmo .beam (AtU8) via beam_lib (A) vs beam_file_parse (B). Sem performance."
+  },
+  "atom": {
+    "module": "atom",
+    "bin": "bench_atom",
+    "n": 100000,
+    "desc": "Atom table: insert+find de N atoms unicos com nome deterministico a<idx>; RESULT = lista ordenada dos nomes."
+  },
+  "ets": {
+    "module": "ets",
+    "bin": "bench_ets",
+    "n": 50000,
+    "desc": "ETS: insert N chaves, lookup de todas, delete de metade; RESULT = count final + soma das chaves restantes."
+  },
+  "runqueue": {
+    "module": "runqueue",
+    "bin": "bench_runqueue",
+    "n": 100000,
+    "desc": "Run queue: enqueue N processos com mix de prioridades, dequeue todos. RESULT = contadores. Proxy Erlang: spawn N procs."
+  },
+  "alloc": {
+    "module": "alloc",
+    "bin": "bench_alloc",
+    "n": 200000,
+    "desc": "Allocator: ciclos alloc/free com padrao de tamanhos deterministico. RESULT = ops. Metricas: bytes alocados/peak."
+  },
+  "msg": {
+    "module": "msg",
+    "bin": "bench_msg",
+    "n": 100000,
+    "desc": "Messaging: ping-pong de N mensagens (mailbox enqueue/dequeue em B; 2 procs em A). RESULT = sent/received."
+  },
+  "emu_loop": {
+    "module": "emu_loop",
+    "bin": "bench_emu",
+    "n": 10000000,
+    "desc": "Piloto interpretador: N iteracoes ADD (loop via CALL) em B; recursao de cauda aritmetica em A. RESULT = valor final."
+  }
+}
