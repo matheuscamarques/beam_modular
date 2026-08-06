@@ -6,37 +6,36 @@
 
 /**
  * @file beam_global.h
- * @brief Public Opaque Interface for Global State (Atom Table & ETS Database).
+ * @brief Public Opaque Interface for Global Shared State: Atom Table, ETS Tables, and Distributed Node Table.
  */
 
-/* Opaque Atom Table Types */
 typedef struct beam_atom_table beam_atom_table_t;
+typedef struct beam_ets_table beam_ets_table_t;
+typedef struct beam_node_table beam_node_table_t;
 
+/* Atom Table Operations */
 beam_atom_table_t* beam_atom_table_create(const beam_allocator_i* alloc, size_t initial_capacity);
 void beam_atom_table_destroy(beam_atom_table_t* table);
-beam_result_t beam_atom_put(beam_atom_table_t* table, const char* name, size_t len, uint32_t* out_index);
-beam_result_t beam_atom_find(const beam_atom_table_t* table, const char* name, size_t len, uint32_t* out_index);
-const char* beam_atom_get_name(const beam_atom_table_t* table, uint32_t index, size_t* out_len);
+
+Eterm beam_atom_intern(beam_atom_table_t* table, const char* name);
+const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term);
 size_t beam_atom_table_count(const beam_atom_table_t* table);
 
-/* Make Eterm atom from index */
-static inline Eterm make_atom_eterm(uint32_t index) {
-    return (Eterm)((index << 4) | TAG_IMMED1_ATOM);
-}
-
-/* Extract atom index from Eterm */
-static inline uint32_t eterm_to_atom_index(Eterm term) {
-    return (uint32_t)(term >> 4);
-}
-
-/* Opaque ETS Table Types */
-typedef struct beam_ets_table beam_ets_table_t;
-
+/* Concurrent ETS Table Operations */
 beam_ets_table_t* beam_ets_table_create(const char* name, const beam_allocator_i* alloc);
-void beam_ets_table_destroy(beam_ets_table_t* table);
-beam_result_t beam_ets_insert(beam_ets_table_t* table, Eterm key, Eterm value);
-beam_result_t beam_ets_lookup(const beam_ets_table_t* table, Eterm key, Eterm* out_value);
-beam_result_t beam_ets_delete(beam_ets_table_t* table, Eterm key);
-size_t beam_ets_count(const beam_ets_table_t* table);
+void beam_ets_table_destroy(beam_ets_table_t* ets);
+
+beam_result_t beam_ets_insert(beam_ets_table_t* ets, Eterm key, Eterm value);
+beam_result_t beam_ets_lookup(const beam_ets_table_t* ets, Eterm key, Eterm* out_value);
+beam_result_t beam_ets_delete(beam_ets_table_t* ets, Eterm key);
+size_t beam_ets_count(const beam_ets_table_t* ets);
+
+/* Distributed Erlang Node Table Operations */
+beam_node_table_t* beam_node_table_create(const beam_allocator_i* alloc);
+void beam_node_table_destroy(beam_node_table_t* nt);
+
+beam_result_t beam_node_table_connect(beam_node_table_t* nt, const char* node_name);
+bool beam_node_table_is_connected(const beam_node_table_t* nt, const char* node_name);
+size_t beam_node_table_count(const beam_node_table_t* nt);
 
 #endif /* BEAM_GLOBAL_H */

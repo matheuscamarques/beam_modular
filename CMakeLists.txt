@@ -34,7 +34,7 @@ target_link_libraries(beam_scheduler_mod PRIVATE beam_messaging_mod)
 add_library(beam_emulator_mod STATIC src/emulator/beam_emu.c src/emulator/beam_bif.c src/emulator/beam_load.c src/emulator/beam_code_server.c)
 target_include_directories(beam_emulator_mod PRIVATE src/emulator)
 
-add_library(beam_global_mod STATIC src/global/atom_table.c src/global/ets.c)
+add_library(beam_global_mod STATIC src/global/atom_table.c src/global/ets.c src/global/dist_node.c)
 target_include_directories(beam_global_mod PRIVATE src/global)
 
 add_library(beam_io_mod STATIC src/io/sys_poll.c src/io/erl_nif.c)
@@ -53,6 +53,10 @@ target_link_libraries(beam_core_bin PRIVATE beam_core_mod)
 
 # Unit & Integration Tests
 enable_testing()
+
+add_executable(test_dist_node tests/unit/test_dist_node.c)
+target_link_libraries(test_dist_node PRIVATE beam_global_mod beam_mocks)
+add_test(NAME test_dist_node COMMAND test_dist_node)
 
 add_executable(test_full_vm tests/integration/test_full_vm.c)
 target_link_libraries(test_full_vm PRIVATE beam_core_mod beam_mocks)
@@ -110,7 +114,7 @@ target_link_libraries(test_bif PRIVATE beam_emulator_mod beam_scheduler_mod beam
 add_test(NAME test_bif COMMAND test_bif)
 
 add_executable(test_messaging tests/unit/test_messaging.c)
-target_link_libraries(test_messaging PRIVATE beam_messaging_mod beam_scheduler_mod beam_mocks)
+target_link_libraries(test_messaging PRIVATE beam_messaging_mod beam_scheduler_mod beam_global_mod beam_mocks)
 add_test(NAME test_messaging COMMAND test_messaging)
 
 add_executable(test_ets tests/unit/test_ets.c)

@@ -1,8 +1,8 @@
 -module(emu_loop).
 -export([main/0]).
 
-%% Lado A - Piloto interpretador: recursao de cauda aritmética (loop(N-1, Acc+1)).
-%% RESULT: valor final (deve bater com o loop ADD/CALL do interpretador em B).
+%% Side A - Interpreter pilot: arithmetic tail recursion (loop(N-1, Acc+1)).
+%% RESULT: final value (must match the ADD/CALL interpreter loop on side B).
 main() ->
     [ArgN | _] = init:get_plain_arguments(),
     N = list_to_integer(ArgN),

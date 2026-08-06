@@ -9,7 +9,7 @@
 #include "beam_memory.h"
 #include "beam_scheduler.h"
 
-/* --- Protocolo comum --- */
+/* --- Common protocol --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void fnv_update(const unsigned char* data, size_t len) {
@@ -44,7 +44,7 @@ static beam_priority_t next_prio(long i) {
 
 int main(int argc, char** argv) {
     long N = (argc > 1) ? atol(argv[1]) : 100000;
-    if (N < 0) { fprintf(stderr, "N invalido\n"); return 2; }
+    if (N < 0) { fprintf(stderr, "invalid N\n"); return 2; }
 
     beam_allocator_i alloc = beam_allocator_create_system();
     beam_run_queue_t* rq = beam_run_queue_create(&alloc);
@@ -56,17 +56,17 @@ int main(int argc, char** argv) {
     char line[64];
     long long t0 = monotonic_us();
 
-    /* Enqueue N processos com mix de prioridades */
+    /* Enqueue N processes with a priority mix */
     for (long i = 0; i < N; i++) {
         procs[i] = beam_process_create((uint32_t)(i + 1), 64, &alloc);
-        if (!procs[i]) { fprintf(stderr, "process create falhou em %ld\n", i); return 1; }
+        if (!procs[i]) { fprintf(stderr, "process create failed at %ld\n", i); return 1; }
         if (beam_run_queue_enqueue(rq, procs[i], next_prio(i)) != BEAM_OK) {
-            fprintf(stderr, "enqueue falhou em %ld\n", i);
+            fprintf(stderr, "enqueue failed at %ld\n", i);
             return 1;
         }
     }
 
-    /* Dequeue de todos */
+    /* Dequeue all */
     long dequeued = 0;
     beam_process_t* p;
     while ((p = beam_run_queue_dequeue(rq)) != NULL) {
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
 
     finish(t1 - t0, 2 * N);
 
-    printf("METRIC procs_criados=%ld\n", N);
+    printf("METRIC procs_created=%ld\n", N);
     beam_memory_stats_t st = beam_allocator_get_stats(&alloc);
     printf("METRIC total_allocated=%zu\n", st.total_allocated_bytes);
 

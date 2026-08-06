@@ -9,7 +9,7 @@
 #include "beam_memory.h"
 #include "beam_global.h"
 
-/* --- Protocolo comum --- */
+/* --- Common protocol --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void fnv_update(const unsigned char* data, size_t len) {
@@ -39,7 +39,7 @@ static long long monotonic_us(void) {
 
 int main(int argc, char** argv) {
     long N = (argc > 1) ? atol(argv[1]) : 50000;
-    if (N < 0) { fprintf(stderr, "N invalido\n"); return 2; }
+    if (N < 0) { fprintf(stderr, "invalid N\n"); return 2; }
 
     beam_allocator_i alloc = beam_allocator_create_system();
     beam_ets_table_t* table = beam_ets_table_create("bench_ets", &alloc);
@@ -48,15 +48,15 @@ int main(int argc, char** argv) {
     char line[64];
     long long t0 = monotonic_us();
 
-    /* Insert N chaves */
+    /* Insert N keys */
     for (long i = 0; i < N; i++) {
         if (beam_ets_insert(table, make_small_int(i), make_small_int(i * 2)) != BEAM_OK) {
-            fprintf(stderr, "insert falhou em %ld\n", i);
+            fprintf(stderr, "insert failed at %ld\n", i);
             return 1;
         }
     }
 
-    /* Lookup de todas */
+    /* Lookup all */
     long found_all = 0;
     for (long i = 0; i < N; i++) {
         Eterm v;
@@ -65,12 +65,12 @@ int main(int argc, char** argv) {
         }
     }
 
-    /* Delete de pares (deterministico: mesmo criterio do lado A) */
+    /* Delete evens (deterministic: same criterion as side A) */
     for (long i = 0; i < N; i += 2) {
         beam_ets_delete(table, make_small_int(i));
     }
 
-    /* Lookup das chaves restantes (impares) */
+    /* Lookup remaining (odd) keys */
     long found_rest = 0;
     for (long i = 1; i < N; i += 2) {
         Eterm v;

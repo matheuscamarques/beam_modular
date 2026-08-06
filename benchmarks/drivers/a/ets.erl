@@ -1,8 +1,8 @@
 -module(ets).
 -export([main/0]).
 
-%% Lado A - ETS: insert N, lookup todas, delete pares, lookup das impares restantes.
-%% RESULT: count final + found_all + found_rest (todos deterministicos).
+%% Side A - ETS: insert N, lookup all, delete evens, lookup remaining odds.
+%% RESULT: final count + found_all + found_rest (all deterministic).
 main() ->
     [ArgN | _] = init:get_plain_arguments(),
     N = list_to_integer(ArgN),

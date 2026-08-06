@@ -8,7 +8,7 @@
 #include "beam_core.h"
 #include "beam_memory.h"
 
-/* --- Protocolo comum: RESULT lines + FNV-1a 64 + time --- */
+/* --- Common protocol: RESULT lines + FNV-1a 64 + time --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void fnv_update(const unsigned char* data, size_t len) {
@@ -38,7 +38,7 @@ static long long monotonic_us(void) {
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        fprintf(stderr, "usage: bench_loader <arquivo.beam>\n");
+        fprintf(stderr, "usage: bench_loader <file.beam>\n");
         return 2;
     }
 

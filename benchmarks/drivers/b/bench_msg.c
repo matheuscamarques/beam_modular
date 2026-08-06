@@ -9,7 +9,7 @@
 #include "beam_memory.h"
 #include "beam_messaging.h"
 
-/* --- Protocolo comum --- */
+/* --- Common protocol --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void fnv_update(const unsigned char* data, size_t len) {
@@ -39,7 +39,7 @@ static long long monotonic_us(void) {
 
 int main(int argc, char** argv) {
     long N = (argc > 1) ? atol(argv[1]) : 100000;
-    if (N < 0) { fprintf(stderr, "N invalido\n"); return 2; }
+    if (N < 0) { fprintf(stderr, "invalid N\n"); return 2; }
 
     beam_allocator_i alloc = beam_allocator_create_system();
     beam_mailbox_t* mbox = beam_mailbox_create(&alloc);
@@ -48,15 +48,15 @@ int main(int argc, char** argv) {
     char line[64];
     long long t0 = monotonic_us();
 
-    /* Enqueue N (envio) */
+    /* Enqueue N (send) */
     for (long i = 1; i <= N; i++) {
         if (beam_mailbox_enqueue(mbox, make_small_int(i)) != BEAM_OK) {
-            fprintf(stderr, "enqueue falhou em %ld\n", i);
+            fprintf(stderr, "enqueue failed at %ld\n", i);
             return 1;
         }
     }
 
-    /* Dequeue N (recebimento) */
+    /* Dequeue N (receive) */
     long received = 0;
     for (long i = 1; i <= N; i++) {
         Eterm out;
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 
     finish(t1 - t0, 2 * N);
 
-    printf("METRIC mailbox_restante=%zu\n", beam_mailbox_count(mbox));
+    printf("METRIC mailbox_remaining=%zu\n", beam_mailbox_count(mbox));
     beam_memory_stats_t st = beam_allocator_get_stats(&alloc);
     printf("METRIC total_allocated=%zu\n", st.total_allocated_bytes);
 

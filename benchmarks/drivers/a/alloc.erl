@@ -1,9 +1,9 @@
 -module(alloc).
 -export([main/0]).
 
-%% Lado A - Allocator: ciclos de alocacao/desalocacao com padrao deterministico
-%% de tamanhos: size = (i rem 5) * 16 + 4 bytes, tocando todos os bytes.
-%% RESULT: ops + total de bytes somados (paridade aritmetica com o lado B).
+%% Side A - Allocator: alloc/free cycles with a deterministic size pattern:
+%% size = (i rem 5) * 16 + 4 bytes, touching all bytes.
+%% RESULT: ops + total bytes summed (arithmetic parity with side B).
 main() ->
     [ArgN | _] = init:get_plain_arguments(),
     N = list_to_integer(ArgN),

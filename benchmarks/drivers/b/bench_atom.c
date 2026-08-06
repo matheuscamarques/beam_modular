@@ -9,7 +9,7 @@
 #include "beam_memory.h"
 #include "beam_global.h"
 
-/* --- Protocolo comum: RESULT lines + FNV-1a 64 --- */
+/* --- Common protocol: RESULT lines + FNV-1a 64 --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void emit_line(const char* line) {
@@ -40,7 +40,7 @@ static int cmpstr(const void* a, const void* b) {
 
 int main(int argc, char** argv) {
     long N = (argc > 1) ? atol(argv[1]) : 100000;
-    if (N < 0) { fprintf(stderr, "N invalido\n"); return 2; }
+    if (N < 0) { fprintf(stderr, "invalid N\n"); return 2; }
 
     beam_allocator_i alloc = beam_allocator_create_system();
     beam_atom_table_t* table = beam_atom_table_create(&alloc, 0);
@@ -49,30 +49,29 @@ int main(int argc, char** argv) {
     char name[32];
     long long t0 = monotonic_us();
 
-    /* Fase insert */
+    /* Insert phase */
     for (long i = 0; i < N; i++) {
         snprintf(name, sizeof(name), "a%ld", i);
-        uint32_t idx = 0;
-        if (beam_atom_put(table, name, strlen(name), &idx) != BEAM_OK) {
-            fprintf(stderr, "put falhou em %ld\n", i);
+        if (beam_atom_intern(table, name) == ETERM_INVALID) {
+            fprintf(stderr, "intern failed at %ld\n", i);
             return 1;
         }
     }
 
-    /* Coleta + ordenacao canonica (byte-a-byte, igual lists:sort do Erlang) */
+    /* Collect + canonical sort (byte-for-byte, like Erlang lists:sort) */
     char** names = (char**)malloc((size_t)N * sizeof(char*));
-    size_t* lens = (size_t*)malloc((size_t)N * sizeof(size_t));
-    if (!names || !lens) { return 1; }
+    if (!names) { return 1; }
     for (long i = 0; i < N; i++) {
-        names[i] = (char*)beam_atom_get_name(table, (uint32_t)i, &lens[i]);
+        snprintf(name, sizeof(name), "a%ld", i);
+        Eterm term = beam_atom_intern(table, name);
+        names[i] = (char*)beam_atom_lookup(table, term);
     }
     qsort(names, (size_t)N, sizeof(char*), cmpstr);
 
-    /* Fase find (sem inserir) */
+    /* Find phase (no insertion); names are null-terminated by the table */
     for (long i = 0; i < N; i++) {
-        uint32_t idx;
-        if (beam_atom_find(table, names[i], lens[i], &idx) != BEAM_OK) {
-            fprintf(stderr, "find falhou\n");
+        if (beam_atom_intern(table, names[i]) == ETERM_INVALID) {
+            fprintf(stderr, "find failed\n");
             return 1;
         }
     }
@@ -90,7 +89,6 @@ int main(int argc, char** argv) {
     printf("METRIC total_allocated=%zu\n", st.total_allocated_bytes);
     printf("METRIC peak_allocated=%zu\n", st.peak_allocated_bytes);
 
-    free(lens);
     free(names);
     beam_atom_table_destroy(table);
     return 0;

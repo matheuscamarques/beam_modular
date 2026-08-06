@@ -1,8 +1,8 @@
 -module(loader).
 -export([main/0]).
 
-%% Lado A - Paridade pura: extrai atoms do mesmo .beam via beam_lib.
-%% Uso: erl -noshell -pa <dir> -eval 'loader:main(), halt(0).' -extra <arquivo.beam>
+%% Side A - Pure parity: extracts atoms from the same .beam via beam_lib.
+%% Usage: erl -noshell -pa <dir> -eval 'loader:main(), halt(0).' -extra <file.beam>
 main() ->
     [Path | _] = init:get_plain_arguments(),
     case beam_lib:chunks(Path, [atoms]) of

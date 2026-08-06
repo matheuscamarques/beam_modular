@@ -8,7 +8,7 @@
 #include "beam_core.h"
 #include "beam_memory.h"
 
-/* --- Protocolo comum --- */
+/* --- Common protocol --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void fnv_update(const unsigned char* data, size_t len) {
@@ -38,7 +38,7 @@ static long long monotonic_us(void) {
 
 int main(int argc, char** argv) {
     long N = (argc > 1) ? atol(argv[1]) : 200000;
-    if (N < 0) { fprintf(stderr, "N invalido\n"); return 2; }
+    if (N < 0) { fprintf(stderr, "invalid N\n"); return 2; }
 
     beam_allocator_i alloc = beam_allocator_create_system();
     char line[64];
@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
     for (long i = 1; i <= N; i++) {
         size_t size = (size_t)((i % 5) * 16 + 4);
         void* p = alloc.alloc(alloc.ctx, size);
-        if (!p) { fprintf(stderr, "alloc falhou em %ld\n", i); return 1; }
-        memset(p, 1, size); /* touch todos os bytes */
+        if (!p) { fprintf(stderr, "alloc failed at %ld\n", i); return 1; }
+        memset(p, 1, size); /* touch all bytes */
         total_used += (long long)size;
         alloc.free(alloc.ctx, p);
     }

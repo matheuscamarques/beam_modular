@@ -1,8 +1,8 @@
 -module(atom).
 -export([main/0]).
 
-%% Lado A - Atom table: insert (list_to_atom) + find (atom_to_binary) de N atoms.
-%% RESULT = nomes ordenados byte-a-byte (paridade com qsort strcmp do lado B).
+%% Side A - Atom table: insert (list_to_atom) + find (atom_to_binary) of N atoms.
+%% RESULT = names sorted byte-for-byte (parity with qsort strcmp on side B).
 main() ->
     [ArgN | _] = init:get_plain_arguments(),
     N = list_to_integer(ArgN),

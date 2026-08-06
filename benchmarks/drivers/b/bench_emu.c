@@ -10,7 +10,7 @@
 #include "beam_scheduler.h"
 #include "beam_emu_internal.h"
 
-/* --- Protocolo comum --- */
+/* --- Common protocol --- */
 static uint64_t g_fnv = 0xcbf29ce484222325ULL;
 
 static void fnv_update(const unsigned char* data, size_t len) {
@@ -40,39 +40,37 @@ static long long monotonic_us(void) {
 
 int main(int argc, char** argv) {
     long N = (argc > 1) ? atol(argv[1]) : 10000000;
-    if (N < 0) { fprintf(stderr, "N invalido\n"); return 2; }
+    if (N < 0) { fprintf(stderr, "invalid N\n"); return 2; }
 
     beam_allocator_i alloc = beam_allocator_create_system();
     beam_process_t* proc = beam_process_create(1, 128, &alloc);
     if (!proc) { fprintf(stderr, "process create failed\n"); return 1; }
 
-    /* Loop X0 += X1(X1=1) por CALL em label 1:
-     *  0: MOVE literal=1 -> X1
-     *  1: LABEL
-     *  2: ADD X0 X1 -> X0
-     *  3: CALL 1
-     *  4: HALT (inalcancavel)
-     * Cada iteracao consome 2 reducoes; reducoes = 2N+1
-     * => exatamente N iteracoes de ADD, X0 final = N. */
-    beam_instruction_t code[] = {
-        { .opcode = BEAM_OP_MOVE, .arg2 = 1, .literal = make_small_int(1) },
-        { .opcode = BEAM_OP_LABEL },
-        { .opcode = BEAM_OP_ADD, .arg1 = 0, .arg2 = 1, .arg3 = 0 },
-        { .opcode = BEAM_OP_CALL, .arg1 = 1 },
-        { .opcode = BEAM_OP_HALT }
-    };
-    beam_process_set_reductions(proc, (int)(2 * N + 1));
+    /* Loop X0 += X1(X1=1): linear program with N ADD operations.
+     * The interpreter writes *out_result ONLY when the PC falls outside the
+     * array (reduction exhaustion returns BEAM_OK WITHOUT writing the result),
+     * so we use inline instructions and reductions = N + 2: exactly N ADDs
+     * executed, natural exit (X0 = N). */
+    size_t nitems = (size_t)N + 1; /* 1 MOVE + N ADD */
+    beam_instruction_t* code = (beam_instruction_t*)malloc(nitems * sizeof(beam_instruction_t));
+    if (!code) { fprintf(stderr, "malloc failed\n"); return 1; }
+
+    code[0] = (beam_instruction_t){ .opcode = BEAM_OP_MOVE, .arg2 = 1, .literal = make_small_int(1) };
+    for (size_t i = 1; i < nitems; i++) {
+        code[i] = (beam_instruction_t){ .opcode = BEAM_OP_ADD, .arg1 = 0, .arg2 = 1, .arg3 = 0 };
+    }
+    beam_process_set_reductions(proc, (int)N + 2);
 
     char line[64];
     Eterm result = 0;
 
     long long t0 = monotonic_us();
-    beam_result_t res = beam_emu_execute_code(proc, code,
-                                              sizeof(code) / sizeof(code[0]), &result);
+    beam_result_t res = beam_emu_execute_code(proc, code, nitems, &result);
     long long t1 = monotonic_us();
 
     if (res != BEAM_OK && res != BEAM_ERR_HALT) {
-        fprintf(stderr, "execucao falhou (res=%d)\n", (int)res);
+        fprintf(stderr, "execution failed (res=%d)\n", (int)res);
+        free(code);
         return 1;
     }
 
@@ -86,6 +84,7 @@ int main(int argc, char** argv) {
     printf("METRIC reductions=%d\n", beam_process_get_reductions(proc));
     printf("METRIC estado=%d\n", (int)beam_process_get_state(proc));
 
+    free(code);
     beam_process_destroy(proc);
     return 0;
 }

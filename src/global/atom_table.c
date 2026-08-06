@@ -29,6 +29,14 @@ static uint32_t hash_atom_name(const char* name, size_t len) {
     return hash;
 }
 
+static Eterm atom_eterm(uint32_t index) {
+    return (Eterm)(((Eterm)index << 4) | TAG_IMMED1_ATOM);
+}
+
+static uint32_t atom_index(Eterm term) {
+    return (uint32_t)(term >> 4);
+}
+
 beam_atom_table_t* beam_atom_table_create(const beam_allocator_i* alloc, size_t initial_capacity) {
     if (!alloc || !alloc->alloc || !alloc->free) {
         return NULL;
@@ -84,8 +92,8 @@ void beam_atom_table_destroy(beam_atom_table_t* table) {
     alloc.free(alloc.ctx, table);
 }
 
-beam_result_t beam_atom_find(const beam_atom_table_t* table, const char* name, size_t len, uint32_t* out_index) {
-    if (!table || !name || !out_index) return BEAM_ERR_INVALID_ARG;
+static beam_atom_entry_t* atom_table_find_entry(const beam_atom_table_t* table, const char* name, size_t len) {
+    if (!table || !name) return NULL;
 
     uint32_t hash = hash_atom_name(name, len);
     size_t bucket_idx = hash % table->bucket_count;
@@ -93,26 +101,22 @@ beam_result_t beam_atom_find(const beam_atom_table_t* table, const char* name, s
     beam_atom_entry_t* entry = table->buckets[bucket_idx];
     while (entry) {
         if (entry->hash == hash && entry->len == len && memcmp(entry->name, name, len) == 0) {
-            *out_index = entry->index;
-            return BEAM_OK;
+            return entry;
         }
         entry = entry->next;
     }
 
-    return BEAM_ERR_NOT_FOUND;
+    return NULL;
 }
 
-beam_result_t beam_atom_put(beam_atom_table_t* table, const char* name, size_t len, uint32_t* out_index) {
-    if (!table || !name || !out_index) return BEAM_ERR_INVALID_ARG;
-
-    beam_result_t res = beam_atom_find(table, name, len, out_index);
-    if (res == BEAM_OK) return BEAM_OK;
+static Eterm atom_table_insert(beam_atom_table_t* table, const char* name, size_t len) {
+    if (!table || !name) return ETERM_INVALID;
 
     if (table->count >= table->index_map_capacity) {
         size_t new_cap = table->index_map_capacity * 2;
         beam_atom_entry_t** new_map = (beam_atom_entry_t**)table->alloc.realloc(
             table->alloc.ctx, table->index_map, sizeof(beam_atom_entry_t*) * new_cap);
-        if (!new_map) return BEAM_ERR_NO_MEMORY;
+        if (!new_map) return ETERM_INVALID;
         table->index_map = new_map;
         table->index_map_capacity = new_cap;
     }
@@ -121,12 +125,12 @@ beam_result_t beam_atom_put(beam_atom_table_t* table, const char* name, size_t l
     size_t bucket_idx = hash % table->bucket_count;
 
     beam_atom_entry_t* entry = (beam_atom_entry_t*)table->alloc.alloc(table->alloc.ctx, sizeof(beam_atom_entry_t));
-    if (!entry) return BEAM_ERR_NO_MEMORY;
+    if (!entry) return ETERM_INVALID;
 
     entry->name = (char*)table->alloc.alloc(table->alloc.ctx, len + 1);
     if (!entry->name) {
         table->alloc.free(table->alloc.ctx, entry);
-        return BEAM_ERR_NO_MEMORY;
+        return ETERM_INVALID;
     }
 
     memcpy(entry->name, name, len);
@@ -139,19 +143,33 @@ beam_result_t beam_atom_put(beam_atom_table_t* table, const char* name, size_t l
     table->buckets[bucket_idx] = entry;
 
     table->index_map[table->count] = entry;
-    *out_index = entry->index;
     table->count++;
 
-    return BEAM_OK;
+    return atom_eterm(entry->index);
 }
 
-const char* beam_atom_get_name(const beam_atom_table_t* table, uint32_t index, size_t* out_len) {
-    if (!table || index >= table->count) return NULL;
+Eterm beam_atom_intern(beam_atom_table_t* table, const char* name) {
+    if (!table || !name) return ETERM_INVALID;
+
+    size_t len = strlen(name);
+    beam_atom_entry_t* existing = atom_table_find_entry(table, name, len);
+    if (existing) {
+        return atom_eterm(existing->index);
+    }
+
+    return atom_table_insert(table, name, len);
+}
+
+const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term) {
+    if (!table) return NULL;
+    if ((atom_term & IMMED1_TAG_MASK) != TAG_IMMED1_ATOM) return NULL;
+
+    uint32_t index = atom_index(atom_term);
+    if (index >= table->count) return NULL;
 
     beam_atom_entry_t* entry = table->index_map[index];
     if (!entry) return NULL;
 
-    if (out_len) *out_len = entry->len;
     return entry->name;
 }
 

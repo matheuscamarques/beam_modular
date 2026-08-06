@@ -1,10 +1,10 @@
 -module(runqueue).
 -export([main/0]).
 
-%% Lado A - Proxy de run queue: spawn de N processos com mix de prioridades
-%% (max/high/normal/low) que completam trabalho trivial e reportam 'done'.
-%% NOTA: proxy semantico - o scheduler Erlang nao tem enqueue/dequeue visivel;
-%% metricas sao tempo para completar N procs + reductions/s.
+%% Side A - Run queue proxy: spawn N processes with a mix of priorities
+%% (max/high/normal/low) that complete trivial work and report 'done'.
+%% NOTE: semantic proxy - the Erlang scheduler has no visible enqueue/dequeue;
+%% metrics are time to complete N procs + reductions/s.
 main() ->
     [ArgN | _] = init:get_plain_arguments(),
     N = list_to_integer(ArgN),

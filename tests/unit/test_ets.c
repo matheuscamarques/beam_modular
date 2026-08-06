@@ -12,15 +12,20 @@ void test_ets_table(void) {
     mock_memory_stats_t stats = {0};
     beam_allocator_i alloc = mock_memory_create(&stats);
 
+    beam_atom_table_t* atoms = beam_atom_table_create(&alloc, 16);
+    assert(atoms != NULL);
+
     beam_ets_table_t* ets = beam_ets_table_create("user_sessions", &alloc);
     assert(ets != NULL);
     assert(beam_ets_count(ets) == 0);
 
-    Eterm key1 = make_atom_eterm(10);
-    Eterm val1 = make_atom_eterm(999);
+    Eterm key1 = beam_atom_intern(atoms, "user_10");
+    Eterm val1 = beam_atom_intern(atoms, "active_999");
+    assert(key1 != ETERM_INVALID && val1 != ETERM_INVALID);
 
-    Eterm key2 = make_atom_eterm(20);
-    Eterm val2 = make_atom_eterm(888);
+    Eterm key2 = beam_atom_intern(atoms, "user_20");
+    Eterm val2 = beam_atom_intern(atoms, "active_888");
+    assert(key2 != ETERM_INVALID && val2 != ETERM_INVALID);
 
     beam_result_t res;
     res = beam_ets_insert(ets, key1, val1);
@@ -48,6 +53,7 @@ void test_ets_table(void) {
     (void)res;
 
     beam_ets_table_destroy(ets);
+    beam_atom_table_destroy(atoms);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);

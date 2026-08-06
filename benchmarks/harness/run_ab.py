@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """
-run_ab.py - Harness A/B dos testes comparativos BEAM.
+run_ab.py - A/B harness for BEAM comparative benchmarks.
 
-Lado A: VM Erlang/OTP original (referencia, buildado de otp_src).
-Lado B: reescrita modular (drivers C em benchmarks/drivers/b, via CMake ENABLE_BENCH).
+Side A: original Erlang/OTP VM (reference, built from otp_src).
+Side B: the modular rewrite (C drivers in benchmarks/drivers/b, via CMake
+        ENABLE_BENCH).
 
-Protocolo de saida dos drivers (ambos os lados):
-  RESULT <linha>       (repetido; sequencia canonica = paridade)
-  FINGERPRINT <hex64>  (FNV-1a 64 sobre linhas + "\\n")
-  TIME_US <int>        (tempo interno do driver, secundario)
-  OPS <int>            (operacoes semanticas)
-  METRIC k=v           (metricas extras, nao participam da paridade)
+Driver output protocol (both sides):
+  RESULT <line>       (repeated; canonical sequence = parity)
+  FINGERPRINT <hex64>  (FNV-1a 64 over lines + "\n")
+  TIME_US <int>        (driver-internal time, secondary)
+  OPS <int>            (semantic operations)
+  METRIC k=v           (extra metrics, do not participate in parity)
 
-Paridade = gate duro: a sequencia RESULT de TODOS os runs e lados deve
-ser identica byte-a-byte. Performance usa wall-time mediano por lado
-(mediana + MAD, ordem ABBA alternada, warmup, pinning via taskset).
+Parity = hard gate: the RESULT sequence of ALL runs and sides must be
+byte-for-byte identical. Performance uses median wall-time per side
+(median + MAD, alternating ABBA order, warmup, taskset pinning).
 """
 
 import argparse
@@ -33,8 +34,8 @@ SAMPLES = os.path.join(REPO, "benchmarks", "samples")
 REPORTS = os.path.join(REPO, "benchmarks", "reports")
 SCRATCH = os.path.join(REPO, "build", "ab")
 BENCH_DIR = os.path.join(REPO, "build", "benchmarks")
-ERL_DEFAULT = os.path.join(REPO, "build_otp30", "bin", "erl")
-ERLC_DEFAULT = os.path.join(REPO, "build_otp30", "bin", "erlc")
+ERL_DEFAULT = os.path.join(REPO, "otp_src", "bin", "erl")
+ERLC_DEFAULT = os.path.join(REPO, "otp_src", "bin", "erlc")
 
 
 def log(msg, quiet=False):
@@ -44,7 +45,7 @@ def log(msg, quiet=False):
 
 def cmd_ok(path, hint):
     if not os.path.isfile(path):
-        print(f"ERRO: {path} nao encontrado. {hint}", file=sys.stderr)
+        print(f"ERROR: {path} not found. {hint}", file=sys.stderr)
         sys.exit(2)
     return path
 
@@ -57,7 +58,7 @@ def cpu_model():
                     return line.split(":", 1)[1].strip()
     except OSError:
         pass
-    return "desconhecido"
+    return "unknown"
 
 
 def otp_release(erl):
@@ -88,7 +89,7 @@ def compile_driver(erlc, src, outdir, quiet):
     log(f"  erlc: {os.path.basename(src)}", quiet)
     r = subprocess.run([erlc, "-o", outdir, src], capture_output=True, timeout=120)
     if r.returncode != 0:
-        print(f"ERRO compilando {src}:\n{r.stderr.decode()}", file=sys.stderr)
+        print(f"ERROR compiling {src}:\n{r.stderr.decode()}", file=sys.stderr)
         sys.exit(2)
 
 
@@ -132,7 +133,7 @@ def run_side(side, wl, scratch, erl, bench_dir, cpu, quiet):
         r = subprocess.run(run_args, capture_output=True, timeout=600)
     wall_s = time.perf_counter() - t0
 
-    if r.returncode == 127 and cpu:  # taskset indisponivel
+    if r.returncode == 127 and cpu:  # taskset unavailable
         run_args = args
         t0 = time.perf_counter()
         r = subprocess.run(run_args, capture_output=True, timeout=600)
@@ -141,7 +142,7 @@ def run_side(side, wl, scratch, erl, bench_dir, cpu, quiet):
     result, fp, time_us, ops, metrics = parse_stdout(r.stdout)
     if r.returncode != 0:
         raise RuntimeError(
-            f"lado {side} ({os.path.basename(args[0])}) exit={r.returncode}: "
+            f"side {side} ({os.path.basename(args[0])}) exit={r.returncode}: "
             f"{r.stderr.decode(errors='replace')[-500:]}")
 
     return {
@@ -157,6 +158,10 @@ def run_side(side, wl, scratch, erl, bench_dir, cpu, quiet):
 
 def run_workload(name, wl, erl, bench_dir, scratch, cpu, runs, warmup, quiet):
     log(f"== Workload: {name} ({wl.get('desc', '')})", quiet)
+    if not os.path.isfile(os.path.join(bench_dir, wl["bin"])):
+        raise RuntimeError(
+            f"driver B '{wl['bin']}' nao encontrado em {bench_dir}. "
+            f"Execute: cmake -B build -DENABLE_BENCH=ON && cmake --build build")
     if warmup > 0:
         log("  warmup:", quiet)
         for s in ("A", "B"):
@@ -164,7 +169,7 @@ def run_workload(name, wl, erl, bench_dir, scratch, cpu, runs, warmup, quiet):
                 run_side(s, wl, scratch, erl, bench_dir, cpu, quiet)
                 log(f"    {s} ok", quiet)
             except RuntimeError as e:
-                log(f"    {s} FALHOU no warmup: {e}", quiet)
+                log(f"    {s} FAILED in warmup: {e}", quiet)
 
     data = []
     for r in range(runs):
@@ -192,9 +197,9 @@ def run_workload(name, wl, erl, bench_dir, scratch, cpu, runs, warmup, quiet):
     delta = ((stats["B"]["median_wall_s"] - stats["A"]["median_wall_s"])
              / stats["A"]["median_wall_s"] * 100.0) if stats["A"]["median_wall_s"] else None
 
-    log(f"  PARIDADE: {status}", quiet)
-    log(f"  A mediana: {stats['A']['median_wall_s']*1000:.1f}ms   "
-        f"B mediana: {stats['B']['median_wall_s']*1000:.1f}ms   delta(B/A): "
+    log(f"  PARITY: {status}", quiet)
+    log(f"  A median: {stats['A']['median_wall_s']*1000:.1f}ms   "
+        f"B median: {stats['B']['median_wall_s']*1000:.1f}ms   delta(B/A): "
         f"{delta:+.1f}%" if delta is not None else "", quiet)
 
     return {"parity": parity, "runs": data, "stats": stats, "delta_pct": delta,
@@ -210,14 +215,14 @@ def write_report(reports, workloads, meta, quiet):
     with open(base + ".json", "w") as f:
         json.dump(payload, f, indent=2, default=str)
 
-    md = [f"# Relatorio A/B - {ts}",
+    md = [f"# A/B report - {ts}",
           "",
-          f"- Referencia A: OTP {meta['otp_release']} ({meta['erl']})",
-          f"- Reescrita B: beam_modular @ {meta['git_head']}",
-          f"- Maquina: {meta['cpu']}",
-          f"- CPU pin: {meta['cpu_pin'] or 'nenhum'} | runs: {meta['runs']} (+{meta['warmup']} warmup)",
+          f"- Reference A: OTP {meta['otp_release']} ({meta['erl']})",
+          f"- Rewrite B: beam_modular @ {meta['git_head']}",
+          f"- Machine: {meta['cpu']}",
+          f"- CPU pin: {meta['cpu_pin'] or 'none'} | runs: {meta['runs']} (+{meta['warmup']} warmup)",
           "",
-          "| workload | paridade | A med (ms) | B med (ms) | delta B/A | MAD A | MAD B |",
+          "| workload | parity | A med (ms) | B med (ms) | delta B/A | MAD A | MAD B |",
           "|---|---|---|---|---|---|---|"]
     for name, w in workloads.items():
         md.append(
@@ -229,28 +234,26 @@ def write_report(reports, workloads, meta, quiet):
     with open(base + ".md", "w") as f:
         f.write("\n".join(md) + "\n")
 
-    log(f"Relatorio: {base}.md", quiet)
+    log(f"Report: {base}.md", quiet)
     return base
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Harness A/B BEAM original vs reescrita")
-    ap.add_argument("--workload", help="nome do workload no catalogo")
-    ap.add_argument("--all", action="store_true", help="rodar todos os workloads")
-    ap.add_argument("--runs", type=int, default=7, help="numero de runs (default 7)")
-    ap.add_argument("--warmup", type=int, default=1, help="runs de aquecimento (default 1)")
-    ap.add_argument("--cpu", default="3", help="pinning taskset -c (default '3'; '' desliga)")
-    ap.add_argument("--out", default=REPORTS, help="diretorio de relatorios")
-    ap.add_argument("--erl", default=ERL_DEFAULT, help="caminho do erl (lado A)")
-    ap.add_argument("--erlc", default=ERLC_DEFAULT, help="caminho do erlc")
-    ap.add_argument("--bench-dir", default=BENCH_DIR, help="diretorio dos drivers B")
-    ap.add_argument("--quiet", action="store_true", help="menos saida")
+    ap = argparse.ArgumentParser(description="A/B harness: original BEAM vs rewrite")
+    ap.add_argument("--workload", help="workload name from the catalog")
+    ap.add_argument("--all", action="store_true", help="run all workloads")
+    ap.add_argument("--runs", type=int, default=7, help="number of runs (default 7)")
+    ap.add_argument("--warmup", type=int, default=1, help="warmup runs (default 1)")
+    ap.add_argument("--cpu", default="3", help="taskset -c pinning (default '3'; '' disables)")
+    ap.add_argument("--out", default=REPORTS, help="reports directory")
+    ap.add_argument("--erl", default=ERL_DEFAULT, help="path to erl (side A)")
+    ap.add_argument("--erlc", default=ERLC_DEFAULT, help="path to erlc")
+    ap.add_argument("--bench-dir", default=BENCH_DIR, help="B drivers directory")
+    ap.add_argument("--quiet", action="store_true", help="less output")
     args = ap.parse_args()
 
-    erl = cmd_ok(args.erl, "Execute make -j4 em build_otp30 (ou passe --erl).")
-    erlc = cmd_ok(args.erlc, "Execute make -j4 em build_otp30 (ou passe --erlc).")
-    cmd_ok(os.path.join(args.bench_dir, "bench_loader"),
-           "Execute: cmake -B build -DENABLE_BENCH=ON && cmake --build build")
+    erl = cmd_ok(args.erl, "Run make -j4 in otp_src (in-source OTP 30 build).")
+    erlc = cmd_ok(args.erlc, "Run make -j4 in otp_src (in-source OTP 30 build).")
 
     with open(CATALOG) as f:
         catalog = json.load(f)
@@ -259,10 +262,10 @@ def main():
     elif args.workload:
         names = [args.workload]
     else:
-        ap.error("informe --workload <nome> ou --all")
+        ap.error("provide --workload <name> or --all")
     for n in names:
         if n not in catalog:
-            print(f"ERRO: workload '{n}' desconhecido. Disponiveis: "
+            print(f"ERROR: unknown workload '{n}'. Available: "
                   f"{[k for k in catalog if not k.startswith('_')]}", file=sys.stderr)
             sys.exit(2)
 
@@ -276,7 +279,7 @@ def main():
         "warmup": args.warmup,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-    log(f"OTP referencia: {meta['otp_release']} | commit reescrita: {meta['git_head']}")
+    log(f"Reference OTP: {meta['otp_release']} | rewrite commit: {meta['git_head']}")
 
     os.makedirs(SCRATCH, exist_ok=True)
     compile_driver(erlc, os.path.join(DRIVERS_A, "ab.erl"), SCRATCH, args.quiet)
@@ -291,7 +294,7 @@ def main():
             res = run_workload(name, wl, erl, args.bench_dir, SCRATCH, args.cpu,
                                args.runs, args.warmup, args.quiet)
         except RuntimeError as e:
-            print(f"  ERRO no workload {name}: {e}", file=sys.stderr)
+            print(f"  ERROR in workload {name}: {e}", file=sys.stderr)
             res = {"parity": False, "status": "ERROR", "runs": [], "stats": {},
                    "delta_pct": None, "error": str(e)}
         workloads[name] = res
@@ -300,7 +303,7 @@ def main():
 
     base = write_report(args.out, workloads, meta, args.quiet)
     if args.quiet:
-        print(f"Relatorio: {base}.md")
+        print(f"Report: {base}.md")
     sys.exit(0 if all_ok else 1)
 
 

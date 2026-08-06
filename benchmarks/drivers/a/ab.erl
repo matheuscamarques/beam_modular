@@ -1,7 +1,7 @@
 -module(ab).
 -export([fnv1a/1, emit/3]).
 
-%% FNV-1a 64-bit (mesmo algoritmo do lado C dos drivers B)
+%% FNV-1a 64-bit (same algorithm as the C side of the B drivers)
 fnv1a(Bin) ->
     fnv1a(Bin, 16#cbf29ce484222325).
 
@@ -10,9 +10,9 @@ fnv1a(<<>>, H) ->
 fnv1a(<<B, Rest/binary>>, H) ->
     fnv1a(Rest, ((H bxor B) * 16#100000001b3) band 16#FFFFFFFFFFFFFFFF).
 
-%% Protocolo de saida comum (paridade byte-a-byte com os drivers C):
-%%   RESULT <linha>   (repetido, na ordem canonica)
-%%   FINGERPRINT <hex64> (FNV-1a sobre a concatenacao das linhas + "\n")
+%% Common output protocol (byte-for-byte parity with the C drivers):
+%%   RESULT <line>   (repeated, in canonical order)
+%%   FINGERPRINT <hex64> (FNV-1a over the concatenated lines + "\n")
 %%   TIME_US <int>
 %%   OPS <int>
 emit(Lines, TimeUs, Ops) ->

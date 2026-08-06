@@ -17,25 +17,27 @@ void test_atom_table_isolated(void) {
     assert(table != NULL);
     assert(beam_atom_table_count(table) == 0);
 
-    uint32_t idx_ok, idx_err;
-    beam_result_t res = beam_atom_put(table, "ok", 2, &idx_ok);
-    assert(res == BEAM_OK);
-    assert(idx_ok == 0);
+    Eterm atom_ok = beam_atom_intern(table, "ok");
+    assert(atom_ok != 0);
+    assert(beam_atom_table_count(table) == 1);
 
-    Eterm term_ok = make_atom_eterm(idx_ok);
-    assert(eterm_to_atom_index(term_ok) == idx_ok);
-    (void)term_ok;
+    Eterm atom_err = beam_atom_intern(table, "error");
+    assert(atom_err != 0);
+    assert(beam_atom_table_count(table) == 2);
 
-    res = beam_atom_put(table, "error", 5, &idx_err);
-    assert(res == BEAM_OK);
-    assert(idx_err == 1);
+    Eterm atom_ok_repeat = beam_atom_intern(table, "ok");
+    assert(atom_ok_repeat == atom_ok);
+    assert(beam_atom_table_count(table) == 2);
+    (void)atom_ok_repeat;
 
-    size_t len = 0;
-    const char* name = beam_atom_get_name(table, idx_err, &len);
-    assert(name != NULL && len == 5);
-    assert(strcmp(name, "error") == 0);
-    (void)name;
-    (void)res;
+    /* Lookup atom name */
+    const char* name_ok = beam_atom_lookup(table, atom_ok);
+    assert(name_ok != NULL && strcmp(name_ok, "ok") == 0);
+
+    const char* name_err = beam_atom_lookup(table, atom_err);
+    assert(name_err != NULL && strcmp(name_err, "error") == 0);
+    (void)name_ok;
+    (void)name_err;
 
     beam_atom_table_destroy(table);
 

@@ -18,10 +18,13 @@ void test_mailbox_queue(void) {
     assert(mbox != NULL);
     assert(beam_mailbox_count(mbox) == 0);
 
+    beam_atom_table_t* atoms = beam_atom_table_create(&alloc, 16);
+    assert(atoms != NULL);
+
     /* Enqueue messages */
     Eterm msg1 = ETERM_NIL;
-    Eterm msg2 = make_atom_eterm(42);
-    Eterm msg3 = make_atom_eterm(100);
+    Eterm msg2 = beam_atom_intern(atoms, "msg_two");
+    Eterm msg3 = beam_atom_intern(atoms, "msg_three");
 
     beam_result_t res;
     res = beam_mailbox_enqueue(mbox, msg1);
@@ -52,6 +55,7 @@ void test_mailbox_queue(void) {
     (void)res;
 
     beam_mailbox_destroy(mbox);
+    beam_atom_table_destroy(atoms);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
@@ -65,12 +69,15 @@ void test_process_to_process_messaging(void) {
     mock_memory_stats_t stats = {0};
     beam_allocator_i alloc = mock_memory_create(&stats);
 
+    beam_atom_table_t* atoms = beam_atom_table_create(&alloc, 16);
+    assert(atoms != NULL);
+
     beam_process_t* proc_sender   = beam_process_create(1001, 128, &alloc);
     beam_process_t* proc_receiver = beam_process_create(1002, 128, &alloc);
 
     assert(proc_sender && proc_receiver);
 
-    Eterm tuple_msg_elems[2] = { make_atom_eterm(1), make_small_int(500) };
+    Eterm tuple_msg_elems[2] = { beam_atom_intern(atoms, "tuple_ok"), make_small_int(500) };
     Eterm tuple_msg = beam_make_tuple(proc_sender, 2, tuple_msg_elems);
 
     /* Send message from sender to receiver process */
@@ -88,6 +95,7 @@ void test_process_to_process_messaging(void) {
 
     beam_process_destroy(proc_sender);
     beam_process_destroy(proc_receiver);
+    beam_atom_table_destroy(atoms);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);

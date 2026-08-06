@@ -27,7 +27,7 @@ beam_modular/
 
 ## 3. Strict Refactoring Principles
 
-1. **ZERO GLOVAL STATE**: Eliminate global variables shared across modules. Encapsulate all state in context structures passed by pointer.
+1. **ZERO GLOBAL STATE**: Eliminate global variables shared across modules. Encapsulate all state in context structures passed by pointer.
 2. **OPAQUE POINTERS**: Public headers in `include/` must NEVER define internal `struct` layouts. Use `typedef struct beam_<module> beam_<module>_t;`.
 3. **RESTRICTIVE ENCAPSULATION**: Direct access to struct fields from outside their owning `.c` file is strictly forbidden. Provide explicit accessor functions (e.g., `beam_scheduler_get_status(proc)`).
 4. **DEPENDENCY INJECTION (vtables)**: Direct function calls across module boundaries are prohibited. Modules must receive interface structures (*vtables*) during initialization.

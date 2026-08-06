@@ -1,8 +1,8 @@
 -module(msg).
 -export([main/0]).
 
-%% Lado A - Messaging: um processo envia N mensagens ao main (send/receive).
-%% Paridade com mailbox enqueue/dequeue do lado B: sent=N, received=N.
+%% Side A - Messaging: one process sends N messages to main (send/receive).
+%% Parity with mailbox enqueue/dequeue on side B: sent=N, received=N.
 main() ->
     [ArgN | _] = init:get_plain_arguments(),
     N = list_to_integer(ArgN),
