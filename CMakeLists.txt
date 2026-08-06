@@ -60,7 +60,7 @@ add_library(beam_scheduler_mod STATIC src/scheduler/erl_process.c src/scheduler/
 target_include_directories(beam_scheduler_mod PRIVATE src/scheduler src/emulator)
 target_link_libraries(beam_scheduler_mod PRIVATE beam_messaging_mod)
 
-add_library(beam_emulator_mod STATIC src/emulator/beam_emu.c src/emulator/beam_bif.c src/emulator/beam_load.c src/emulator/beam_code_server.c)
+add_library(beam_emulator_mod STATIC src/emulator/beam_emu.c src/emulator/beam_decode.c src/emulator/beam_bif.c src/emulator/beam_load.c src/emulator/beam_code_server.c)
 target_include_directories(beam_emulator_mod PRIVATE src/emulator)
 
 add_library(beam_global_mod STATIC src/global/atom_table.c src/global/ets.c src/global/dist_node.c)

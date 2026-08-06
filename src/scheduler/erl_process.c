@@ -13,6 +13,7 @@ beam_process_t* beam_process_create(uint32_t pid, size_t initial_heap_words, con
     proc->state = BEAM_PROC_STATE_RUNNABLE;
     proc->priority = BEAM_PRIO_NORMAL;
     proc->reductions = BEAM_DEFAULT_REDUCTIONS;
+    proc->frame.sp = BEAM_MAX_STACK_WORDS;
 
     size_t capacity = (initial_heap_words > 0) ? initial_heap_words : 256;
     proc->heap = (Eterm*)alloc->alloc(alloc->ctx, sizeof(Eterm) * capacity);

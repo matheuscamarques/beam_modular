@@ -3,6 +3,7 @@
 
 #include "beam_scheduler.h"
 #include "beam_messaging.h"
+#include "beam_emu_internal.h"
 
 #define BEAM_DEFAULT_REDUCTIONS 4000
 
@@ -19,6 +20,9 @@ struct beam_process {
     
     /* Mailbox */
     beam_mailbox_t* mailbox;
+
+    /* Execution Frame */
+    beam_emulator_frame_t frame;
 
     beam_allocator_i alloc;
 };

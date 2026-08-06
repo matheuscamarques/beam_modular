@@ -38,7 +38,12 @@ beam_file_t* beam_file_parse(const uint8_t* buffer, size_t size, const beam_allo
         /* Process Atom Table Chunks: Atom or AtU8 */
         if (strcmp(chunk_id, "Atom") == 0 || strcmp(chunk_id, "AtU8") == 0) {
             bool is_atu8 = (strcmp(chunk_id, "AtU8") == 0);
-            uint32_t num_atoms = read_u32_be(&buffer[pos]);
+            int32_t raw_num_atoms = (int32_t)read_u32_be(&buffer[pos]);
+            uint32_t num_atoms = (raw_num_atoms < 0) ? (uint32_t)(-raw_num_atoms) : (uint32_t)raw_num_atoms;
+            if (num_atoms > 100000) {
+                /* Sanity check safety limit */
+                return NULL;
+            }
             beam->atom_count = num_atoms;
             beam->atom_table = (char**)alloc->alloc(alloc->ctx, sizeof(char*) * num_atoms);
             if (beam->atom_table) {
