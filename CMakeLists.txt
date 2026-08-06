@@ -36,15 +36,22 @@ target_include_directories(beam_messaging_mod PRIVATE src/messaging)
 add_library(beam_global_mod STATIC src/global/atom_table.c src/global/ets.c)
 target_include_directories(beam_global_mod PRIVATE src/global)
 
+add_library(beam_io_mod STATIC src/io/sys_poll.c)
+target_include_directories(beam_io_mod PRIVATE src/io)
+
 add_library(beam_mocks STATIC tests/mocks/mock_memory.c)
 target_include_directories(beam_mocks PUBLIC tests/mocks)
 
 # Core Executable
 add_executable(beam_core_bin src/core/beam_main.c)
-target_link_libraries(beam_core_bin PRIVATE beam_memory_mod beam_scheduler_mod beam_emulator_mod beam_messaging_mod beam_global_mod)
+target_link_libraries(beam_core_bin PRIVATE beam_memory_mod beam_scheduler_mod beam_emulator_mod beam_messaging_mod beam_global_mod beam_io_mod)
 
 # Unit Tests
 enable_testing()
+
+add_executable(test_io tests/unit/test_io.c)
+target_link_libraries(test_io PRIVATE beam_io_mod beam_mocks)
+add_test(NAME test_io COMMAND test_io)
 
 add_executable(test_beam_loader tests/unit/test_beam_loader.c)
 target_link_libraries(test_beam_loader PRIVATE beam_emulator_mod beam_mocks)
