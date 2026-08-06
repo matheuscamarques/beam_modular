@@ -72,20 +72,34 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
 
             case BEAM_OP_ALLOCATE: {
                 uint32_t words = instr->arg1;
-                if (frame->sp - (int)words - 1 < 0) {
-                    return BEAM_ERR_NO_MEMORY;
+                /* Save CP onto unified stack */
+                beam_result_t push_res = beam_process_stack_push(proc, (Eterm)frame->cp);
+                if (push_res != BEAM_OK) {
+                    return push_res;
                 }
-                frame->sp--;
-                frame->stack[frame->sp] = (Eterm)frame->cp;
-                frame->sp -= (int)words;
+                /* Reserve Y registers / words on unified stack */
+                for (uint32_t w = 0; w < words; w++) {
+                    push_res = beam_process_stack_push(proc, 0);
+                    if (push_res != BEAM_OK) return push_res;
+                }
                 break;
             }
 
             case BEAM_OP_DEALLOCATE: {
                 uint32_t words = instr->arg1;
-                frame->sp += (int)words;
-                frame->cp = (uint32_t)frame->stack[frame->sp];
-                frame->sp++;
+                Eterm dummy = 0;
+                /* Pop allocated Y register words */
+                for (uint32_t w = 0; w < words; w++) {
+                    beam_result_t pop_dummy = beam_process_stack_pop(proc, &dummy);
+                    if (pop_dummy != BEAM_OK) return pop_dummy;
+                }
+                /* Restore CP from unified stack */
+                Eterm restored_cp = 0;
+                beam_result_t pop_res = beam_process_stack_pop(proc, &restored_cp);
+                if (pop_res != BEAM_OK) {
+                    return pop_res;
+                }
+                frame->cp = (uint32_t)restored_cp;
                 break;
             }
 
