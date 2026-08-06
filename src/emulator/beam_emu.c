@@ -1,4 +1,5 @@
 #include "beam_emu_internal.h"
+#include "beam_bif_internal.h"
 #include "../scheduler/erl_process_internal.h"
 #include <stdio.h>
 #include <string.h>
@@ -234,6 +235,20 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                     JUMP_TO_LABEL(fail_label);
                 }
                 continue;
+            }
+
+            case BEAM_OP_CALL_EXT: {
+                /* arg1: bif_index, arg2: arity */
+                size_t bif_index = (size_t)instr->arg1;
+                int arity = (int)instr->arg2;
+                Eterm bif_res = 0;
+                beam_result_t res = beam_bif_dispatch(bif_index, proc, frame->x_regs, arity, &bif_res);
+                if (res == BEAM_OK) {
+                    frame->x_regs[0] = bif_res;
+                } else {
+                    return res;
+                }
+                break;
             }
 
             case BEAM_OP_HALT: {

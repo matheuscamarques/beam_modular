@@ -200,6 +200,37 @@ void test_opcode_select_val(void) {
     printf("  [PASSED] test_opcode_select_val\n");
 }
 
+void test_opcode_call_ext(void) {
+    printf("[UNIT TEST] Testing OpCode CALL_EXT (External BIF Dispatch)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_process_t* proc = beam_process_create(205, 128, &alloc);
+    assert(proc != NULL);
+
+    beam_instruction_t code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(300) },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(150) },
+        { .opcode = BEAM_OP_CALL_EXT, .arg1 = 1, .arg2 = 2 }, /* bif_add_2 */
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    Eterm result = 0;
+    beam_result_t res = beam_emu_execute_code(proc, code, sizeof(code)/sizeof(code[0]), &result);
+
+    assert(res == BEAM_ERR_HALT);
+    (void)res;
+    assert(eterm_to_small_int(result) == 450);
+
+    beam_process_destroy(proc);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] Executed CALL_EXT (BIF +) 300 + 150 = 450 successfully!\n");
+    printf("  [PASSED] test_opcode_call_ext\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: EMULATOR  \n");
@@ -209,5 +240,6 @@ int main(void) {
     test_opcode_messaging();
     test_opcode_pattern_matching();
     test_opcode_select_val();
+    test_opcode_call_ext();
     return 0;
 }
