@@ -24,6 +24,7 @@ beam_process_t* beam_process_create(uint32_t pid, size_t initial_heap_words, con
 
     proc->heap_capacity = capacity;
     proc->heap_top = 0;
+    proc->stack_top = capacity;
 
     proc->mailbox = beam_mailbox_create(alloc);
     if (!proc->mailbox) {
@@ -150,4 +151,24 @@ Eterm beam_make_list(beam_process_t* proc, Eterm head, Eterm tail) {
     hp[1] = tail;
 
     return (Eterm)((uintptr_t)hp | TAG_PRIMARY_LIST);
+}
+
+beam_result_t beam_process_stack_push(beam_process_t* proc, Eterm term) {
+    if (!proc || !proc->heap) return BEAM_ERR_INVALID_ARG;
+    if (proc->stack_top <= proc->heap_top) {
+        return BEAM_ERR_NO_MEMORY; /* Stack overflow into heap memory area */
+    }
+    proc->stack_top--;
+    proc->heap[proc->stack_top] = term;
+    return BEAM_OK;
+}
+
+beam_result_t beam_process_stack_pop(beam_process_t* proc, Eterm* out_term) {
+    if (!proc || !proc->heap || !out_term) return BEAM_ERR_INVALID_ARG;
+    if (proc->stack_top >= proc->heap_capacity) {
+        return BEAM_ERR_BADARG; /* Stack underflow */
+    }
+    *out_term = proc->heap[proc->stack_top];
+    proc->stack_top++;
+    return BEAM_OK;
 }

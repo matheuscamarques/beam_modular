@@ -1,5 +1,5 @@
 {
-  "commit": "924fb207e2eb01de85adf2bf3ca093387235e906",
+  "commit": "c8398e647fc0cce1c15b236720dc944075b07574",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -69,7 +69,7 @@
     },
     {
       "source": "scheduler/erl_process_internal.h",
-      "target": "beam_emu_internal.h"
+      "target": "../emulator/beam_emu_internal.h"
     },
     {
       "source": "scheduler/beam_scheduler_loop.c",

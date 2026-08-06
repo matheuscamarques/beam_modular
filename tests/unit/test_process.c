@@ -4,6 +4,7 @@
 
 #include "beam_core.h"
 #include "beam_scheduler.h"
+#include "../../src/scheduler/erl_process_internal.h"
 #include "mock_memory.h"
 
 void test_process_lifecycle(void) {
@@ -27,6 +28,13 @@ void test_process_lifecycle(void) {
     /* Test reduction consumption */
     beam_process_consume_reductions(proc, 1500);
     assert(beam_process_get_reductions(proc) == 2500);
+
+    /* Test unified stack push and pop */
+    assert(beam_process_stack_push(proc, make_small_int(12345)) == BEAM_OK);
+    Eterm popped = 0;
+    assert(beam_process_stack_pop(proc, &popped) == BEAM_OK);
+    assert(eterm_to_small_int(popped) == 12345);
+    (void)popped;
 
     /* State transition */
     beam_process_set_state(proc, BEAM_PROC_STATE_RUNNING);
