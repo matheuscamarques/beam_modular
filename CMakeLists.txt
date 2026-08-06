@@ -37,7 +37,7 @@ target_include_directories(beam_emulator_mod PRIVATE src/emulator)
 add_library(beam_global_mod STATIC src/global/atom_table.c src/global/ets.c)
 target_include_directories(beam_global_mod PRIVATE src/global)
 
-add_library(beam_io_mod STATIC src/io/sys_poll.c)
+add_library(beam_io_mod STATIC src/io/sys_poll.c src/io/erl_nif.c)
 target_include_directories(beam_io_mod PRIVATE src/io)
 
 add_library(beam_mocks STATIC tests/mocks/mock_memory.c)
@@ -49,6 +49,10 @@ target_link_libraries(beam_core_bin PRIVATE beam_memory_mod beam_scheduler_mod b
 
 # Unit Tests
 enable_testing()
+
+add_executable(test_nif tests/unit/test_nif.c)
+target_link_libraries(test_nif PRIVATE beam_io_mod beam_scheduler_mod beam_messaging_mod beam_mocks)
+add_test(NAME test_nif COMMAND test_nif)
 
 add_executable(test_run_queue tests/unit/test_run_queue.c)
 target_link_libraries(test_run_queue PRIVATE beam_scheduler_mod beam_messaging_mod beam_mocks)
