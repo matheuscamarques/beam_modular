@@ -7,8 +7,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Security and strict warning flags
 add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Werror)
 
-# LTO (Link-Time Optimization) support
-option(ENABLE_LTO "Enable Link-Time Optimization" ON)
+# LTO (Link-Time Optimization) support (disabled by default for test stability)
+option(ENABLE_LTO "Enable Link-Time Optimization" OFF)
 if(ENABLE_LTO)
     include(CheckIPOSupported)
     check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
