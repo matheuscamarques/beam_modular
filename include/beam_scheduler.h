@@ -20,6 +20,14 @@ typedef enum {
     BEAM_PROC_STATE_EXITED
 } beam_process_state_t;
 
+typedef enum {
+    BEAM_PRIO_MAX = 0,
+    BEAM_PRIO_HIGH = 1,
+    BEAM_PRIO_NORMAL = 2,
+    BEAM_PRIO_LOW = 3,
+    BEAM_NUM_PRIORITIES = 4
+} beam_priority_t;
+
 /* Process Lifecycle & Memory */
 beam_process_t* beam_process_create(uint32_t pid, size_t initial_heap_words, const beam_allocator_i* alloc);
 void beam_process_destroy(beam_process_t* proc);
@@ -36,5 +44,13 @@ void beam_process_consume_reductions(beam_process_t* proc, int count);
 Eterm* beam_process_alloc_heap(beam_process_t* proc, size_t needed_words);
 size_t beam_process_heap_used(const beam_process_t* proc);
 size_t beam_process_heap_capacity(const beam_process_t* proc);
+
+/* Priority Run Queue Public Interface */
+beam_run_queue_t* beam_run_queue_create(const beam_allocator_i* alloc);
+void beam_run_queue_destroy(beam_run_queue_t* rq);
+
+beam_result_t beam_run_queue_enqueue(beam_run_queue_t* rq, beam_process_t* proc, beam_priority_t prio);
+beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq);
+size_t beam_run_queue_count(const beam_run_queue_t* rq);
 
 #endif /* BEAM_SCHEDULER_H */
