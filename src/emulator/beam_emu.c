@@ -213,10 +213,26 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
             }
 
             case BEAM_OP_SELECT_VAL: {
-                /* arg1: src reg, arg2: fail_label. literal: jump table (for now just fallback) */
+                /* arg1: src reg, arg2: fail_label, arg3: jump_table_size */
+                uint32_t src_reg = instr->arg1;
                 uint32_t fail_label = instr->arg2;
-                // Full jump table unsupported in this basic version, jump to fail
-                JUMP_TO_LABEL(fail_label);
+                
+                /* Select matching target label or jump to fail_label if not matched */
+                bool matched = false;
+                if (instr->extra_args && instr->extra_count >= 2) {
+                    for (size_t k = 0; k < instr->extra_count; k += 2) {
+                        if (frame->x_regs[src_reg] == instr->extra_args[k]) {
+                            uint32_t target_label = (uint32_t)instr->extra_args[k + 1];
+                            JUMP_TO_LABEL(target_label);
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!matched) {
+                    JUMP_TO_LABEL(fail_label);
+                }
                 continue;
             }
 

@@ -160,6 +160,46 @@ void test_opcode_pattern_matching(void) {
     printf("  [PASSED] test_opcode_pattern_matching\n");
 }
 
+void test_opcode_select_val(void) {
+    printf("[UNIT TEST] Testing OpCode Select Val (Jump Table Branching)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_process_t* proc = beam_process_create(204, 128, &alloc);
+    assert(proc != NULL);
+
+    Eterm extra_pairs[4] = { make_small_int(10), 2, make_small_int(20), 3 };
+
+    beam_instruction_t code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(20) },
+        { .opcode = BEAM_OP_SELECT_VAL, .arg1 = 0, .arg2 = 4, .arg3 = 2, .extra_args = extra_pairs, .extra_count = 4 },
+        { .opcode = BEAM_OP_LABEL, .arg1 = 2 },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(100) },
+        { .opcode = BEAM_OP_HALT },
+        { .opcode = BEAM_OP_LABEL, .arg1 = 3 },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(200) },
+        { .opcode = BEAM_OP_HALT },
+        { .opcode = BEAM_OP_LABEL, .arg1 = 4 },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(999) },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    Eterm result = 0;
+    beam_result_t res = beam_emu_execute_code(proc, code, sizeof(code)/sizeof(code[0]), &result);
+
+    assert(res == BEAM_ERR_HALT);
+    (void)res;
+    assert(eterm_to_small_int(result) == 200);
+
+    beam_process_destroy(proc);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] Matched SELECT_VAL key 20 and branched cleanly to Label 3 with result 200!\n");
+    printf("  [PASSED] test_opcode_select_val\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: EMULATOR  \n");
@@ -168,5 +208,6 @@ int main(void) {
     test_call_stack_execution();
     test_opcode_messaging();
     test_opcode_pattern_matching();
+    test_opcode_select_val();
     return 0;
 }

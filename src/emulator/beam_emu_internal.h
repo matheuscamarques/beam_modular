@@ -37,6 +37,8 @@ struct beam_instruction {
     uint32_t arg3;
     Eterm literal;
     beam_process_t* target_proc; /* Direct target process reference for sending */
+    const Eterm* extra_args;     /* Optional extra parameters (e.g. SELECT_VAL jump table) */
+    size_t extra_count;
 };
 
 /* Internal register and stack state per process execution frame */
