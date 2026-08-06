@@ -120,5 +120,6 @@ beam_code_server_t* beam_vm_get_code_server(const beam_context_t* ctx);
 /* Code Server Constructors */
 BEAM_NODISCARD beam_code_server_t* beam_code_server_create(const beam_allocator_i* alloc);
 void beam_code_server_destroy(beam_code_server_t* cs);
+size_t beam_code_server_module_count(const beam_code_server_t* cs);
 
 #endif /* BEAM_CORE_H */
