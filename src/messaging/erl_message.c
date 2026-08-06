@@ -58,8 +58,48 @@ beam_result_t beam_mailbox_dequeue(beam_mailbox_t* mbox, Eterm* out_msg) {
         mbox->tail = NULL;
     }
     mbox->count--;
-
     mbox->alloc.free(mbox->alloc.ctx, node);
+    return BEAM_OK;
+}
+
+void beam_mailbox_reset_save_cursor(beam_mailbox_t* mbox) {
+    if (!mbox) return;
+    mbox->save_cursor = mbox->head;
+    mbox->save_prev = NULL;
+}
+
+beam_result_t beam_mailbox_peek_save(beam_mailbox_t* mbox, Eterm* out_msg) {
+    if (!mbox || !out_msg) return BEAM_ERR_INVALID_ARG;
+    if (!mbox->save_cursor) {
+        /* Initialize cursor if at start */
+        mbox->save_cursor = mbox->head;
+        mbox->save_prev = NULL;
+    }
+    if (!mbox->save_cursor) return BEAM_ERR_NOT_FOUND;
+
+    *out_msg = mbox->save_cursor->body;
+    return BEAM_OK;
+}
+
+beam_result_t beam_mailbox_remove_current(beam_mailbox_t* mbox) {
+    if (!mbox || !mbox->save_cursor) return BEAM_ERR_NOT_FOUND;
+
+    beam_message_t* target = mbox->save_cursor;
+    beam_message_t* next = target->next;
+
+    if (mbox->save_prev) {
+        mbox->save_prev->next = next;
+    } else {
+        mbox->head = next;
+    }
+
+    if (target == mbox->tail) {
+        mbox->tail = mbox->save_prev;
+    }
+
+    mbox->save_cursor = next;
+    mbox->count--;
+    mbox->alloc.free(mbox->alloc.ctx, target);
     return BEAM_OK;
 }
 

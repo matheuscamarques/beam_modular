@@ -91,10 +91,12 @@ void test_opcode_messaging(void) {
         { .opcode = BEAM_OP_HALT }
     };
 
-    /* Receiver Bytecode: RECEIVE -> X[0], HALT */
+    /* Receiver Bytecode: LOOP_REC -> X[0], REMOVE_MESSAGE, HALT */
     beam_instruction_t receiver_code[] = {
-        { .opcode = BEAM_OP_RECEIVE, .arg1 = 0 },
-        { .opcode = BEAM_OP_HALT }
+        { .opcode = BEAM_OP_LOOP_REC, .arg1 = 3, .arg2 = 0 },
+        { .opcode = BEAM_OP_REMOVE_MESSAGE },
+        { .opcode = BEAM_OP_HALT },
+        { .opcode = BEAM_OP_WAIT }
     };
 
     Eterm res_val = 0;
@@ -122,7 +124,7 @@ void test_opcode_messaging(void) {
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] OP_SEND and OP_RECEIVE successfully passed value 777 and handled WAITING state!\n");
+    printf("  [RESULT] Selective receive (LOOP_REC, REMOVE_MESSAGE, WAIT) successfully passed value 777 and handled WAITING state!\n");
     printf("  [PASSED] test_opcode_messaging\n");
 }
 

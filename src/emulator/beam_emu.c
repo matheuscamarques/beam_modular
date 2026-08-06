@@ -1,6 +1,7 @@
 #include "beam_emu_internal.h"
 #include "beam_bif_internal.h"
 #include "../scheduler/erl_process_internal.h"
+#include "../messaging/erl_message_internal.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -144,22 +145,45 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 break;
             }
 
-            case BEAM_OP_RECEIVE: {
-                /* arg1: dst register index */
-                uint32_t dst_reg = instr->arg1;
+            case BEAM_OP_LOOP_REC: {
+                /* arg1: fail_label, arg2: dst_reg */
+                uint32_t fail_label = instr->arg1;
+                uint32_t dst_reg = instr->arg2;
                 Eterm msg = 0;
-                beam_result_t res = beam_process_receive_message(proc, &msg);
+                beam_result_t res = beam_mailbox_peek_save(proc->mailbox, &msg);
                 if (res == BEAM_OK) {
                     if (dst_reg < BEAM_NUM_X_REGISTERS) {
                         frame->x_regs[dst_reg] = msg;
                     }
                 } else {
-                    /* Mailbox empty: yield CPU and set WAITING state */
-                    frame->ip = ip; /* Save instruction pointer */
-                    beam_process_set_state(proc, BEAM_PROC_STATE_WAITING);
-                    return BEAM_OK;
+                    JUMP_TO_LABEL(fail_label);
+                    continue;
                 }
                 break;
+            }
+
+            case BEAM_OP_REMOVE_MESSAGE: {
+                beam_result_t rm_res = beam_mailbox_remove_current(proc->mailbox);
+                (void)rm_res;
+                break;
+            }
+
+            case BEAM_OP_LOOP_REC_END: {
+                /* Advance save cursor to next message in mailbox */
+                if (proc->mailbox->save_cursor) {
+                    proc->mailbox->save_prev = proc->mailbox->save_cursor;
+                    proc->mailbox->save_cursor = proc->mailbox->save_cursor->next;
+                }
+                uint32_t loop_label = instr->arg1;
+                JUMP_TO_LABEL(loop_label);
+                continue;
+            }
+
+            case BEAM_OP_WAIT: {
+                /* Yield process and wait for new incoming messages */
+                frame->ip = ip;
+                beam_process_set_state(proc, BEAM_PROC_STATE_WAITING);
+                return BEAM_OK;
             }
 
             case BEAM_OP_MATCH_TUPLE: {

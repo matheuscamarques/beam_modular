@@ -30,6 +30,10 @@ typedef enum {
     BEAM_OP_CALL_EXT,
     BEAM_OP_CALL_LAST,
     BEAM_OP_MAKE_FUN2,
+    BEAM_OP_LOOP_REC,
+    BEAM_OP_LOOP_REC_END,
+    BEAM_OP_REMOVE_MESSAGE,
+    BEAM_OP_WAIT,
     BEAM_OP_HALT
 } beam_opcode_t;
 

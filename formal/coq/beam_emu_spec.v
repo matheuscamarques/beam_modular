@@ -25,6 +25,10 @@ Inductive Opcode : Type :=
   | OpCallLast : Z -> Z -> Opcode
   | OpMakeFun2 : Z -> Z -> Z -> Opcode
   | OpCallExt : Z -> Z -> Opcode
+  | OpLoopRec : Z -> Z -> Opcode
+  | OpLoopRecEnd : Z -> Opcode
+  | OpRemoveMessage : Opcode
+  | OpWait : Opcode
   | OpHalt : Opcode.
 
 Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame :=
@@ -34,6 +38,10 @@ Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame 
   | OpCallLast target n => {| x_regs := frame.(x_regs); ip := target; sp := frame.(sp) + n |}
   | OpMakeFun2 label n dst => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
   | OpCallExt bif arity => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
+  | OpLoopRec fail dst => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
+  | OpLoopRecEnd target => {| x_regs := frame.(x_regs); ip := target; sp := frame.(sp) |}
+  | OpRemoveMessage => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
+  | OpWait => {| x_regs := frame.(x_regs); ip := frame.(ip); sp := frame.(sp) |}
   | OpHalt => frame
   | _ => frame
   end.

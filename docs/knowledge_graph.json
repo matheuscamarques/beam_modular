@@ -1,5 +1,5 @@
 {
-  "commit": "dda569601754f0ade9d3cf84b8415384173fc94d",
+  "commit": "3a71dd05c98847fba5a3d64f5eb16115dc491aff",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -11,7 +11,7 @@
     "io",
     "utils"
   ],
-  "supported_opcodes_count": 22,
+  "supported_opcodes_count": 26,
   "supported_opcodes": [
     "BEAM_OP_LABEL",
     "BEAM_OP_MOVE",
@@ -34,6 +34,10 @@
     "BEAM_OP_CALL_EXT",
     "BEAM_OP_CALL_LAST",
     "BEAM_OP_MAKE_FUN2",
+    "BEAM_OP_LOOP_REC",
+    "BEAM_OP_LOOP_REC_END",
+    "BEAM_OP_REMOVE_MESSAGE",
+    "BEAM_OP_WAIT",
     "BEAM_OP_HALT"
   ],
   "dependencies": [
@@ -96,6 +100,10 @@
     {
       "source": "emulator/beam_emu.c",
       "target": "../scheduler/erl_process_internal.h"
+    },
+    {
+      "source": "emulator/beam_emu.c",
+      "target": "../messaging/erl_message_internal.h"
     },
     {
       "source": "emulator/beam_emu.c",
