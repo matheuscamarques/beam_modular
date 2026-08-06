@@ -109,6 +109,24 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 continue;
             }
 
+            case BEAM_OP_CALL_LAST: {
+                /* Tail Call Optimization (TCO): Deallocate frame and jump directly without updating CP */
+                uint32_t words = instr->arg2;
+                Eterm dummy = 0;
+                for (uint32_t w = 0; w < words; w++) {
+                    beam_result_t pop_dummy = beam_process_stack_pop(proc, &dummy);
+                    if (pop_dummy != BEAM_OK) return pop_dummy;
+                }
+                Eterm restored_cp = 0;
+                beam_result_t pop_res = beam_process_stack_pop(proc, &restored_cp);
+                if (pop_res != BEAM_OK) return pop_res;
+                frame->cp = (uint32_t)restored_cp;
+                
+                /* Jump directly to target function without adding a new return address */
+                ip = (size_t)instr->arg1;
+                continue;
+            }
+
             case BEAM_OP_RETURN: {
                 ip = (size_t)frame->cp;
                 continue;

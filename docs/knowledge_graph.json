@@ -1,5 +1,5 @@
 {
-  "commit": "d668e6c6dcc9a82dcd0dae907c8bc12f2a2488be",
+  "commit": "2858ad7ceb0468b8ecdb88ec2a2b5885b67e04a3",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -11,7 +11,7 @@
     "io",
     "utils"
   ],
-  "supported_opcodes_count": 20,
+  "supported_opcodes_count": 21,
   "supported_opcodes": [
     "BEAM_OP_LABEL",
     "BEAM_OP_MOVE",
@@ -32,6 +32,7 @@
     "BEAM_OP_GET_LIST",
     "BEAM_OP_SELECT_VAL",
     "BEAM_OP_CALL_EXT",
+    "BEAM_OP_CALL_LAST",
     "BEAM_OP_HALT"
   ],
   "dependencies": [

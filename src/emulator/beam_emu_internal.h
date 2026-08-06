@@ -28,6 +28,7 @@ typedef enum {
     BEAM_OP_GET_LIST,
     BEAM_OP_SELECT_VAL,
     BEAM_OP_CALL_EXT,
+    BEAM_OP_CALL_LAST,
     BEAM_OP_HALT
 } beam_opcode_t;
 
