@@ -3,6 +3,7 @@
 
 #include "beam_core.h"
 #include "beam_scheduler.h"
+#include "beam_messaging.h"
 
 #define BEAM_NUM_X_REGISTERS 16
 #define BEAM_MAX_STACK_WORDS 256
@@ -16,6 +17,8 @@ typedef enum {
     BEAM_OP_DEALLOCATE,
     BEAM_OP_CALL,
     BEAM_OP_RETURN,
+    BEAM_OP_SEND,
+    BEAM_OP_RECEIVE,
     BEAM_OP_HALT
 } beam_opcode_t;
 
@@ -25,14 +28,15 @@ struct beam_instruction {
     uint32_t arg2;
     uint32_t arg3;
     Eterm literal;
+    beam_process_t* target_proc; /* Direct target process reference for sending */
 };
 
 /* Internal register and stack state per process execution frame */
 typedef struct {
     Eterm x_regs[BEAM_NUM_X_REGISTERS];
     Eterm stack[BEAM_MAX_STACK_WORDS];
-    int sp; /* Stack pointer index */
-    uint32_t cp; /* Continuation pointer (return instruction address) */
+    int sp;
+    uint32_t cp;
 } beam_emulator_frame_t;
 
 beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction_t* code, size_t code_len, Eterm* out_result);

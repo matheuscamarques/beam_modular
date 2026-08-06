@@ -4,6 +4,7 @@
 
 #include "beam_core.h"
 #include "beam_scheduler.h"
+#include "beam_messaging.h"
 #include "beam_emu_internal.h"
 #include "mock_memory.h"
 
@@ -16,12 +17,6 @@ void test_opcode_execution(void) {
     beam_process_t* proc = beam_process_create(201, 128, &alloc);
     assert(proc != NULL);
 
-    /* Construct Bytecode:
-     * 1. MOVE 10 -> X[0]
-     * 2. MOVE 20 -> X[1]
-     * 3. ADD X[0], X[1] -> X[0]
-     * 4. HALT
-     */
     beam_instruction_t code[] = {
         { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(10) },
         { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(20) },
@@ -54,17 +49,6 @@ void test_call_stack_execution(void) {
     beam_process_t* proc = beam_process_create(202, 128, &alloc);
     assert(proc != NULL);
 
-    /* Bytecode:
-     * 0: ALLOCATE 1
-     * 1: MOVE 100 -> X[0]
-     * 2: CALL (target = 5)
-     * 3: DEALLOCATE 1
-     * 4: HALT
-     * --- Target Function ---
-     * 5: MOVE 50 -> X[1]
-     * 6: ADD X[0], X[1] -> X[0]
-     * 7: RETURN
-     */
     beam_instruction_t code[] = {
         { .opcode = BEAM_OP_ALLOCATE,   .arg1 = 1 },
         { .opcode = BEAM_OP_MOVE,       .arg1 = 0, .arg2 = 0, .literal = make_small_int(100) },
@@ -91,11 +75,63 @@ void test_call_stack_execution(void) {
     printf("  [PASSED] test_call_stack_execution\n");
 }
 
+void test_opcode_messaging(void) {
+    printf("[UNIT TEST] Testing OpCode Messaging (OP_SEND and OP_RECEIVE)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_process_t* proc_sender   = beam_process_create(501, 128, &alloc);
+    beam_process_t* proc_receiver = beam_process_create(502, 128, &alloc);
+
+    /* Sender Bytecode: MOVE 777 -> X[1], SEND X[1] to proc_receiver, HALT */
+    beam_instruction_t sender_code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(777) },
+        { .opcode = BEAM_OP_SEND, .arg1 = 1, .target_proc = proc_receiver },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    /* Receiver Bytecode: RECEIVE -> X[0], HALT */
+    beam_instruction_t receiver_code[] = {
+        { .opcode = BEAM_OP_RECEIVE, .arg1 = 0 },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    Eterm res_val = 0;
+    beam_result_t res;
+
+    /* Execute Sender */
+    res = beam_emu_execute_code(proc_sender, sender_code, sizeof(sender_code)/sizeof(sender_code[0]), &res_val);
+    assert(res == BEAM_ERR_HALT);
+
+    /* Execute Receiver */
+    res = beam_emu_execute_code(proc_receiver, receiver_code, sizeof(receiver_code)/sizeof(receiver_code[0]), &res_val);
+    assert(res == BEAM_ERR_HALT);
+    assert(eterm_to_small_int(res_val) == 777);
+
+    /* Test RECEIVE on empty mailbox -> Should transition to WAITING */
+    beam_process_t* proc_empty = beam_process_create(503, 128, &alloc);
+    res = beam_emu_execute_code(proc_empty, receiver_code, sizeof(receiver_code)/sizeof(receiver_code[0]), &res_val);
+    assert(res == BEAM_OK);
+    (void)res;
+    assert(beam_process_get_state(proc_empty) == BEAM_PROC_STATE_WAITING);
+
+    beam_process_destroy(proc_sender);
+    beam_process_destroy(proc_receiver);
+    beam_process_destroy(proc_empty);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] OP_SEND and OP_RECEIVE successfully passed value 777 and handled WAITING state!\n");
+    printf("  [PASSED] test_opcode_messaging\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: EMULATOR  \n");
     printf("=========================================\n");
     test_opcode_execution();
     test_call_stack_execution();
+    test_opcode_messaging();
     return 0;
 }

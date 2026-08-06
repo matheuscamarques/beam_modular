@@ -8,9 +8,9 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
     beam_emulator_frame_t frame;
     memset(&frame, 0, sizeof(frame));
     frame.sp = BEAM_MAX_STACK_WORDS;
-    frame.cp = (uint32_t)code_len; /* Default return address ends execution */
+    frame.cp = (uint32_t)code_len;
 
-    size_t ip = 0; /* Instruction pointer */
+    size_t ip = 0;
 
     while (ip < code_len) {
         const beam_instruction_t* instr = &code[ip];
@@ -24,7 +24,6 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
 
         switch (instr->opcode) {
             case BEAM_OP_LABEL:
-                /* No-op label marker */
                 break;
 
             case BEAM_OP_MOVE: {
@@ -60,12 +59,10 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
             }
 
             case BEAM_OP_ALLOCATE: {
-                /* Allocate stack slots (arg1 = words needed) */
                 uint32_t words = instr->arg1;
                 if (frame.sp - (int)words - 1 < 0) {
                     return BEAM_ERR_NO_MEMORY;
                 }
-                /* Push CP (continuation return pointer) */
                 frame.sp--;
                 frame.stack[frame.sp] = (Eterm)frame.cp;
                 frame.sp -= (int)words;
@@ -73,17 +70,14 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
             }
 
             case BEAM_OP_DEALLOCATE: {
-                /* Deallocate stack slots (arg1 = words) */
                 uint32_t words = instr->arg1;
                 frame.sp += (int)words;
-                /* Pop CP */
                 frame.cp = (uint32_t)frame.stack[frame.sp];
                 frame.sp++;
                 break;
             }
 
             case BEAM_OP_CALL: {
-                /* arg1 = target instruction index */
                 frame.cp = (uint32_t)(ip + 1);
                 ip = (size_t)instr->arg1;
                 continue;
@@ -92,6 +86,34 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
             case BEAM_OP_RETURN: {
                 ip = (size_t)frame.cp;
                 continue;
+            }
+
+            case BEAM_OP_SEND: {
+                /* arg1: msg register index, target_proc: receiver process pointer */
+                uint32_t msg_reg = instr->arg1;
+                beam_process_t* target = instr->target_proc;
+                if (msg_reg < BEAM_NUM_X_REGISTERS && target) {
+                    Eterm msg = frame.x_regs[msg_reg];
+                    beam_message_send_to_process(target, msg, NULL);
+                }
+                break;
+            }
+
+            case BEAM_OP_RECEIVE: {
+                /* arg1: dst register index */
+                uint32_t dst_reg = instr->arg1;
+                Eterm msg = 0;
+                beam_result_t res = beam_process_receive_message(proc, &msg);
+                if (res == BEAM_OK) {
+                    if (dst_reg < BEAM_NUM_X_REGISTERS) {
+                        frame.x_regs[dst_reg] = msg;
+                    }
+                } else {
+                    /* Mailbox empty: yield CPU and set WAITING state */
+                    beam_process_set_state(proc, BEAM_PROC_STATE_WAITING);
+                    return BEAM_OK;
+                }
+                break;
             }
 
             case BEAM_OP_HALT: {
