@@ -110,13 +110,13 @@ static beam_atom_entry_t* atom_table_find_entry(const beam_atom_table_t* table, 
 }
 
 static Eterm atom_table_insert(beam_atom_table_t* table, const char* name, size_t len) {
-    if (!table || !name) return ETERM_INVALID;
+    if (!table || !name) return 0;
 
     if (table->count >= table->index_map_capacity) {
         size_t new_cap = table->index_map_capacity * 2;
         beam_atom_entry_t** new_map = (beam_atom_entry_t**)table->alloc.realloc(
             table->alloc.ctx, table->index_map, sizeof(beam_atom_entry_t*) * new_cap);
-        if (!new_map) return ETERM_INVALID;
+        if (!new_map) return 0;
         table->index_map = new_map;
         table->index_map_capacity = new_cap;
     }
@@ -125,12 +125,12 @@ static Eterm atom_table_insert(beam_atom_table_t* table, const char* name, size_
     size_t bucket_idx = hash % table->bucket_count;
 
     beam_atom_entry_t* entry = (beam_atom_entry_t*)table->alloc.alloc(table->alloc.ctx, sizeof(beam_atom_entry_t));
-    if (!entry) return ETERM_INVALID;
+    if (!entry) return 0;
 
     entry->name = (char*)table->alloc.alloc(table->alloc.ctx, len + 1);
     if (!entry->name) {
         table->alloc.free(table->alloc.ctx, entry);
-        return ETERM_INVALID;
+        return 0;
     }
 
     memcpy(entry->name, name, len);
@@ -149,7 +149,7 @@ static Eterm atom_table_insert(beam_atom_table_t* table, const char* name, size_
 }
 
 Eterm beam_atom_intern(beam_atom_table_t* table, const char* name) {
-    if (!table || !name) return ETERM_INVALID;
+    if (!table || !name) return 0;
 
     size_t len = strlen(name);
     beam_atom_entry_t* existing = atom_table_find_entry(table, name, len);
@@ -162,7 +162,7 @@ Eterm beam_atom_intern(beam_atom_table_t* table, const char* name) {
 
 const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term) {
     if (!table) return NULL;
-    if ((atom_term & IMMED1_TAG_MASK) != TAG_IMMED1_ATOM) return NULL;
+    if ((atom_term & 0x0F) != TAG_IMMED1_ATOM) return NULL;
 
     uint32_t index = atom_index(atom_term);
     if (index >= table->count) return NULL;

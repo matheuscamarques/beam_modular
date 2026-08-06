@@ -19,19 +19,19 @@ void enif_free_env(ErlNifEnv* env) {
     alloc.free(alloc.ctx, env);
 }
 
-ERL_NIF_TERM enif_make_int(ErlNifEnv* env, int val) {
+Eterm enif_make_int(ErlNifEnv* env, int val) {
     (void)env;
     return make_small_int(val);
 }
 
-bool enif_get_int(ErlNifEnv* env, ERL_NIF_TERM term, int* out_val) {
+bool enif_get_int(ErlNifEnv* env, Eterm term, int* out_val) {
     (void)env;
     if (!beam_is_small_int(term) || !out_val) return false;
     *out_val = (int)eterm_to_small_int(term);
     return true;
 }
 
-ERL_NIF_TERM enif_make_tuple_from_array(ErlNifEnv* env, const ERL_NIF_TERM* elements, unsigned int cnt) {
-    if (!env || !env->proc) return ETERM_INVALID;
+Eterm enif_make_tuple_from_array(ErlNifEnv* env, const Eterm* elements, unsigned int cnt) {
+    if (!env || !env->proc) return 0;
     return beam_make_tuple(env->proc, (size_t)cnt, elements);
 }

@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 project(beam_modular C)
 
-set(CMAKE_C_STANDARD 11)
+# Set C Standard to C23 (Modern C23 ISO Standard)
+set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
 # Security and strict warning flags
 add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Werror)
@@ -68,6 +70,7 @@ target_link_libraries(test_scheduler_loop PRIVATE beam_scheduler_mod beam_emulat
 add_test(NAME test_scheduler_loop COMMAND test_scheduler_loop)
 
 add_executable(test_code_server tests/unit/test_code_server.c)
+target_include_directories(test_code_server PRIVATE src/emulator)
 target_link_libraries(test_code_server PRIVATE beam_emulator_mod beam_mocks)
 add_test(NAME test_code_server COMMAND test_code_server)
 
@@ -84,6 +87,7 @@ target_link_libraries(test_io PRIVATE beam_io_mod beam_mocks)
 add_test(NAME test_io COMMAND test_io)
 
 add_executable(test_beam_loader tests/unit/test_beam_loader.c)
+target_include_directories(test_beam_loader PRIVATE src/emulator)
 target_link_libraries(test_beam_loader PRIVATE beam_emulator_mod beam_mocks)
 add_test(NAME test_beam_loader COMMAND test_beam_loader)
 

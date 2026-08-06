@@ -16,14 +16,14 @@ void test_io_poller(void) {
     assert(poller != NULL);
 
     beam_result_t res;
-    res = beam_io_register_fd(poller, 3, BEAM_IO_READABLE);
+    res = beam_io_poller_register(poller, 3, BEAM_IO_READABLE);
     assert(res == BEAM_OK);
 
-    res = beam_io_register_fd(poller, 4, BEAM_IO_WRITABLE);
+    res = beam_io_poller_register(poller, 4, BEAM_IO_WRITABLE);
     assert(res == BEAM_OK);
 
     int ready = 0;
-    res = beam_io_poll(poller, 10, &ready);
+    res = beam_io_poller_poll(poller, 10, &ready);
     assert(res == BEAM_OK);
     assert(ready == 2);
     (void)res;

@@ -35,7 +35,8 @@ beam_result_t beam_scheduler_step(beam_scheduler_t* sched, const beam_instructio
     if (state == BEAM_PROC_STATE_RUNNABLE || (res == BEAM_OK && state == BEAM_PROC_STATE_RUNNING)) {
         /* Preempted due to reduction exhaustion: reset reductions and re-enqueue */
         beam_process_set_reductions(proc, BEAM_DEFAULT_REDUCTIONS);
-        beam_run_queue_enqueue(sched->run_queue, proc, BEAM_PRIO_NORMAL);
+        beam_result_t enq_res = beam_run_queue_enqueue(sched->run_queue, proc, BEAM_PRIO_NORMAL);
+        (void)enq_res;
     }
 
     return res;

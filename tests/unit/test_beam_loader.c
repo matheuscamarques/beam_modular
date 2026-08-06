@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "beam_core.h"
+#include "beam_load_internal.h"
 #include "mock_memory.h"
 
 void test_beam_binary_parser(void) {

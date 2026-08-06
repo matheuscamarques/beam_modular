@@ -104,12 +104,12 @@ size_t beam_process_heap_capacity(const beam_process_t* proc) {
     return proc ? proc->heap_capacity : 0;
 }
 
-/* COMPOUND TERM CONSTRUCTORS & INSPECTORS */
+/* COMPOUND TERM CONSTRUCTORS */
 Eterm beam_make_tuple(beam_process_t* proc, size_t arity, const Eterm* elements) {
-    if (!proc) return ETERM_INVALID;
+    if (!proc) return 0;
 
     Eterm* hp = beam_process_alloc_heap(proc, arity + 1);
-    if (!hp) return ETERM_INVALID;
+    if (!hp) return 0;
 
     hp[0] = (Eterm)((arity << 6) | SUBTAG_TUPLE);
 
@@ -123,46 +123,13 @@ Eterm beam_make_tuple(beam_process_t* proc, size_t arity, const Eterm* elements)
 }
 
 Eterm beam_make_list(beam_process_t* proc, Eterm head, Eterm tail) {
-    if (!proc) return ETERM_INVALID;
+    if (!proc) return 0;
 
     Eterm* hp = beam_process_alloc_heap(proc, 2);
-    if (!hp) return ETERM_INVALID;
+    if (!hp) return 0;
 
     hp[0] = head;
     hp[1] = tail;
 
     return (Eterm)((uintptr_t)hp | TAG_PRIMARY_LIST);
-}
-
-bool beam_is_tuple(Eterm term) {
-    if (!beam_is_boxed(term)) return false;
-    Eterm* ptr = (Eterm*)(term & ~PRIMARY_TAG_MASK);
-    return (ptr[0] & HEADER_SUBTAG_MASK) == SUBTAG_TUPLE;
-}
-
-size_t beam_tuple_arity(Eterm term) {
-    if (!beam_is_tuple(term)) return 0;
-    Eterm* ptr = (Eterm*)(term & ~PRIMARY_TAG_MASK);
-    return (size_t)(ptr[0] >> 6);
-}
-
-Eterm beam_tuple_element(Eterm term, size_t index) {
-    if (!beam_is_tuple(term)) return ETERM_INVALID;
-    size_t arity = beam_tuple_arity(term);
-    if (index >= arity) return ETERM_INVALID;
-
-    Eterm* ptr = (Eterm*)(term & ~PRIMARY_TAG_MASK);
-    return ptr[1 + index];
-}
-
-Eterm beam_list_head(Eterm term) {
-    if (!beam_is_list(term)) return ETERM_INVALID;
-    Eterm* ptr = (Eterm*)(term & ~PRIMARY_TAG_MASK);
-    return ptr[0];
-}
-
-Eterm beam_list_tail(Eterm term) {
-    if (!beam_is_list(term)) return ETERM_INVALID;
-    Eterm* ptr = (Eterm*)(term & ~PRIMARY_TAG_MASK);
-    return ptr[1];
 }

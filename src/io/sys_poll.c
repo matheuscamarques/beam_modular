@@ -18,7 +18,7 @@ void beam_io_poller_destroy(beam_io_poller_t* poller) {
     alloc.free(alloc.ctx, poller);
 }
 
-beam_result_t beam_io_register_fd(beam_io_poller_t* poller, int fd, uint32_t events) {
+beam_result_t beam_io_poller_register(beam_io_poller_t* poller, int fd, uint32_t events) {
     if (!poller || fd < 0) return BEAM_ERR_INVALID_ARG;
     if (poller->count >= MAX_POLL_ENTRIES) return BEAM_ERR_NO_MEMORY;
 
@@ -29,7 +29,7 @@ beam_result_t beam_io_register_fd(beam_io_poller_t* poller, int fd, uint32_t eve
     return BEAM_OK;
 }
 
-beam_result_t beam_io_poll(beam_io_poller_t* poller, int timeout_ms, int* out_events_ready) {
+beam_result_t beam_io_poller_poll(beam_io_poller_t* poller, int timeout_ms, int* out_events_ready) {
     if (!poller || !out_events_ready) return BEAM_ERR_INVALID_ARG;
     (void)timeout_ms;
 

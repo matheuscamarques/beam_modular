@@ -8,16 +8,16 @@
 #include "mock_memory.h"
 
 /* Simulated C NIF Function: nif_add_tuple_impl(env, argc, argv) */
-static ERL_NIF_TERM nif_add_impl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-    if (argc != 2) return ETERM_INVALID;
+static Eterm nif_add_impl(ErlNifEnv* env, int argc, const Eterm argv[]) {
+    if (argc != 2) return 0;
 
     int a = 0, b = 0;
     if (!enif_get_int(env, argv[0], &a) || !enif_get_int(env, argv[1], &b)) {
-        return ETERM_INVALID;
+        return 0;
     }
 
-    ERL_NIF_TERM sum = enif_make_int(env, a + b);
-    ERL_NIF_TERM elems[2] = { make_small_int(10), sum };
+    Eterm sum = enif_make_int(env, a + b);
+    Eterm elems[2] = { make_small_int(10), sum };
     return enif_make_tuple_from_array(env, elems, 2);
 }
 
@@ -33,8 +33,8 @@ void test_nif_extension(void) {
     ErlNifEnv* env = enif_alloc_env(&alloc, proc);
     assert(env != NULL);
 
-    ERL_NIF_TERM args[2] = { enif_make_int(env, 300), enif_make_int(env, 400) };
-    ERL_NIF_TERM res_tuple = nif_add_impl(env, 2, args);
+    Eterm args[2] = { enif_make_int(env, 300), enif_make_int(env, 400) };
+    Eterm res_tuple = nif_add_impl(env, 2, args);
 
     assert(beam_is_tuple(res_tuple) == true);
     assert(beam_tuple_arity(res_tuple) == 2);

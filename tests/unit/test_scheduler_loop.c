@@ -24,7 +24,8 @@ void test_scheduler_preemption_step(void) {
 
     /* Set low reductions limit = 2 to force preemption */
     beam_process_set_reductions(proc, 2);
-    beam_run_queue_enqueue(rq, proc, BEAM_PRIO_NORMAL);
+    beam_result_t enq_res = beam_run_queue_enqueue(rq, proc, BEAM_PRIO_NORMAL);
+    (void)enq_res;
 
     beam_instruction_t code[] = {
         { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(1) },

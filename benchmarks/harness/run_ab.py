@@ -32,8 +32,8 @@ CATALOG = os.path.join(REPO, "benchmarks", "workloads.json")
 DRIVERS_A = os.path.join(REPO, "benchmarks", "drivers", "a")
 SAMPLES = os.path.join(REPO, "benchmarks", "samples")
 REPORTS = os.path.join(REPO, "benchmarks", "reports")
-SCRATCH = os.path.join(REPO, "build", "ab")
-BENCH_DIR = os.path.join(REPO, "build", "benchmarks")
+SCRATCH = os.path.join(REPO, "benchmarks", "work", "scratch")
+BENCH_DIR = os.path.join(REPO, "benchmarks", "work", "bench")
 ERL_DEFAULT = os.path.join(REPO, "otp_src", "bin", "erl")
 ERLC_DEFAULT = os.path.join(REPO, "otp_src", "bin", "erlc")
 
@@ -161,7 +161,7 @@ def run_workload(name, wl, erl, bench_dir, scratch, cpu, runs, warmup, quiet):
     if not os.path.isfile(os.path.join(bench_dir, wl["bin"])):
         raise RuntimeError(
             f"driver B '{wl['bin']}' nao encontrado em {bench_dir}. "
-            f"Execute: cmake -B build -DENABLE_BENCH=ON && cmake --build build")
+            f"Execute: make -C benchmarks/drivers/b")
     if warmup > 0:
         log("  warmup:", quiet)
         for s in ("A", "B"):
@@ -225,12 +225,18 @@ def write_report(reports, workloads, meta, quiet):
           "| workload | parity | A med (ms) | B med (ms) | delta B/A | MAD A | MAD B |",
           "|---|---|---|---|---|---|---|"]
     for name, w in workloads.items():
+        st = w.get("stats") or {}
+        a, b = st.get("A"), st.get("B")
+        if a is None or b is None:
+            md.append(f"| {name} | {w['status']} | - | - | - | - | - |")
+            continue
+        delta = w["delta_pct"]
         md.append(
-            f"| {name} | {w['status']} | {w['stats']['A']['median_wall_s']*1000:.1f} "
-            f"| {w['stats']['B']['median_wall_s']*1000:.1f} "
-            f"| {w['delta_pct']:+.1f}% " if w['delta_pct'] is not None else "| - "
-            f"| {w['stats']['A']['mad_wall_s']*1000:.1f} "
-            f"| {w['stats']['B']['mad_wall_s']*1000:.1f} |")
+            f"| {name} | {w['status']} | {a['median_wall_s']*1000:.1f} "
+            f"| {b['median_wall_s']*1000:.1f} "
+            f"| {delta:+.1f}% " if delta is not None else "| - "
+            f"| {a['mad_wall_s']*1000:.1f} "
+            f"| {b['mad_wall_s']*1000:.1f} |")
     with open(base + ".md", "w") as f:
         f.write("\n".join(md) + "\n")
 

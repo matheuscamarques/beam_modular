@@ -113,6 +113,10 @@ void beam_allocator_destroy(beam_allocator_i* alloc) {
     alloc->ctx = NULL;
 }
 
+void beam_allocator_destroy_arena(beam_allocator_i* alloc) {
+    beam_allocator_destroy(alloc);
+}
+
 beam_memory_stats_t beam_allocator_get_stats(const beam_allocator_i* alloc) {
     beam_memory_stats_t stats = {0};
     if (!alloc || !alloc->ctx) return stats;

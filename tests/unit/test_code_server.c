@@ -4,14 +4,8 @@
 #include <assert.h>
 
 #include "beam_core.h"
+#include "beam_code_server_internal.h"
 #include "mock_memory.h"
-
-static void write_u32_be(uint8_t* buf, uint32_t val) {
-    buf[0] = (val >> 24) & 0xFF;
-    buf[1] = (val >> 16) & 0xFF;
-    buf[2] = (val >> 8) & 0xFF;
-    buf[3] = val & 0xFF;
-}
 
 void test_code_server_registry(void) {
     printf("[UNIT TEST] Testing Code Server Module Registry...\n");
@@ -23,49 +17,58 @@ void test_code_server_registry(void) {
     assert(cs != NULL);
     assert(beam_code_server_module_count(cs) == 0);
 
-    /* Construct mock BEAM binary */
-    uint8_t buffer[256];
+    /* Construct mock BEAM binary file buffer with Atom chunk containing math_module */
+    uint8_t buffer[12 + 8 + 30];
     memset(buffer, 0, sizeof(buffer));
 
-    memcpy(buffer, "FOR1", 4);
-    write_u32_be(buffer + 4, 100);
-    memcpy(buffer + 8, "BEAM", 4);
+    /* RIFF Header: FOR1 ... BEAM */
+    memcpy(&buffer[0], "FOR1", 4);
+    uint32_t total_len = 8 + 30;
+    buffer[4] = (total_len >> 24) & 0xFF;
+    buffer[5] = (total_len >> 16) & 0xFF;
+    buffer[6] = (total_len >> 8) & 0xFF;
+    buffer[7] = total_len & 0xFF;
+    memcpy(&buffer[8], "BEAM", 4);
 
-    uint8_t* chunk_ptr = buffer + 12;
-    memcpy(chunk_ptr, "AtU8", 4);
-    write_u32_be(chunk_ptr + 4, 30);
-    write_u32_be(chunk_ptr + 8, 1);
-    chunk_ptr[12] = 11;
-    memcpy(chunk_ptr + 13, "math_module", 11);
+    /* Atom Chunk: Atom ... len=30 ... count=1 ... "math_module" */
+    memcpy(&buffer[12], "Atom", 4);
+    uint32_t chunk_len = 22;
+    buffer[16] = (chunk_len >> 24) & 0xFF;
+    buffer[17] = (chunk_len >> 16) & 0xFF;
+    buffer[18] = (chunk_len >> 8) & 0xFF;
+    buffer[19] = chunk_len & 0xFF;
+    buffer[23] = 1; /* atom count = 1 */
+    buffer[24] = 11; /* string len = 11 */
+    memcpy(&buffer[25], "math_module", 11);
 
     beam_file_t* file = beam_file_parse(buffer, 12 + 8 + 30, &alloc);
     assert(file != NULL);
 
     beam_result_t res = beam_code_server_register_module(cs, "math_module", file);
     assert(res == BEAM_OK);
-    assert(beam_code_server_module_count(cs) == 1);
     (void)res;
+    assert(beam_code_server_module_count(cs) == 1);
 
+    /* Lookup module */
     beam_file_t* found = beam_code_server_lookup_module(cs, "math_module");
     assert(found == file);
     (void)found;
 
+    /* Lookup missing module */
     beam_file_t* not_found = beam_code_server_lookup_module(cs, "unknown_module");
     assert(not_found == NULL);
     (void)not_found;
 
+    /* beam_code_server_destroy owns and frees all registered modules */
     beam_code_server_destroy(cs);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] Module 'math_module' registered & found cleanly in Code Server!\n");
-    printf("  [PASSED] test_code_server_registry\n");
+    printf("  [MEMORY] Clean memory stats! Allocs: %zu, Frees: %zu\n", stats.alloc_count, stats.free_count);
+    printf("[PASSED] test_code_server_registry\n");
 }
 
 int main(void) {
-    printf("=========================================\n");
-    printf(" RUNNING ISOLATED MODULE TEST: CODE SVR  \n");
-    printf("=========================================\n");
     test_code_server_registry();
     return 0;
 }

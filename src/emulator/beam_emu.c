@@ -94,7 +94,8 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 beam_process_t* target = instr->target_proc;
                 if (msg_reg < BEAM_NUM_X_REGISTERS && target) {
                     Eterm msg = frame.x_regs[msg_reg];
-                    beam_message_send_to_process(target, msg, NULL);
+                    beam_result_t send_res = beam_message_send_to_process(target, msg, NULL);
+                    (void)send_res;
                 }
                 break;
             }

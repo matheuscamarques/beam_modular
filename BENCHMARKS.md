@@ -9,8 +9,10 @@ opaque pointers and DI via vtables).
 ```
 Side A (original)  -> Erlang drivers in benchmarks/drivers/a/*.erl, run on the
                       `erl`/`erlc` built from otp_src/
-Side B (rewrite)   -> C drivers in benchmarks/drivers/b/bench_*.c, linked
-                      against the beam_*_mod libraries (CMake ENABLE_BENCH=ON)
+Side B (rewrite)   -> C drivers in benchmarks/drivers/b/bench_*.c, compiled by
+                      benchmarks/drivers/b/Makefile from the src/ module
+                      sources (self-contained archive libbench_ab.a, no
+                      dependency on the root CMakeLists)
 Harness            -> benchmarks/harness/run_ab.py
 ```
 
@@ -19,10 +21,14 @@ Harness            -> benchmarks/harness/run_ab.py
 ```bash
 # 1. Build the reference OTP 30 (in-source in otp_src/, gitignored)
 cd otp_src && ./configure --without-javac --without-wx --without-odbc \
-    --without-debugger --without-et --disable-dynamic-ssl-lib && make -j4
+    --without-debugger --without-et --disable-dynamic-ssl-lib && make -j8
+#    NOTE: lib/observer fails to build ("behaviour wx_object undefined") because
+#    wx is disabled; that is harmless for erl/erlc. bin/erl, bin/erlc are
+#    produced anyway by the runtime fixup stage. No-op with `-k` if desired.
 
-# 2. Build the B drivers
-cmake -B build -DENABLE_BENCH=ON && cmake --build build
+# 2. Build the B drivers (self-contained makefile, outputs to benchmarks/work/bench)
+make -C benchmarks/drivers/b
+#    Clean rebuild: make -C benchmarks/drivers/b clean && make -C benchmarks/drivers/b
 
 # 3. Run one workload (e.g. ets) with 7 runs + 1 warmup, pin CPU 3
 python3 benchmarks/harness/run_ab.py --workload ets --runs 7 --warmup 1 --cpu 3
@@ -32,6 +38,7 @@ python3 benchmarks/harness/run_ab.py --all
 ```
 
 Reports: `benchmarks/reports/report_<timestamp>.json|md` (gitignored).
+Scratch (Erlang .beam) + B binaries: `benchmarks/work/` (gitignored).
 
 ## Output protocol (identical on both sides)
 
@@ -79,12 +86,10 @@ alternating ABBA runs; warmup discarded; `taskset` for CPU pinning).
 
 ## Pending items / detected blockers
 
-1. **In-flight refactor** (owner's uncommitted work): `beam_global.h` moved to
-   `beam_atom_intern`/`beam_atom_lookup` + node table; `erl_message.c` references
-   `beam_process_get_mailbox` (defined in erl_process.c). The current tree does
-   not build the unit tests (`make_atom_eterm` removed from the header). The B
-   drivers use `--start-group` at link time to tolerate the
-   scheduler<->messaging cycle.
+1. **RESOLVED**: the atom table refactor to `beam_atom_intern`/`beam_atom_lookup`
+   (Eterm-based) is complete in `beam_global.h` + `atom_table.c`; node table
+   (`beam_node_table_*`) is implemented and unit tested. All unit tests build
+   and pass (`ctest`: 17/17).
 2. **Loader vs real .beam format**: the rewrite's parser reads `AtU8` with
    atom length in 1 byte; the real OTP format uses u16 (verify against a real
    `.beam` produced by erlc and fix if needed).

@@ -3,27 +3,22 @@
 
 #include "beam_core.h"
 #include "beam_memory.h"
-#include "beam_scheduler.h"
 
 /**
  * @file beam_messaging.h
- * @brief Public Opaque Interface for Message Queue / Mailbox operations.
+ * @brief Public Opaque Interface for Mailbox & Message Passing Subsystem (C23 ISO Standard).
  */
 
-typedef struct beam_message beam_message_t;
 typedef struct beam_mailbox beam_mailbox_t;
 
-/* Mailbox Lifecycle */
-beam_mailbox_t* beam_mailbox_create(const beam_allocator_i* alloc);
+BEAM_NODISCARD beam_mailbox_t* beam_mailbox_create(const beam_allocator_i* alloc);
 void beam_mailbox_destroy(beam_mailbox_t* mbox);
 
-/* Mailbox Operations */
-beam_result_t beam_mailbox_enqueue(beam_mailbox_t* mbox, Eterm msg);
-beam_result_t beam_mailbox_dequeue(beam_mailbox_t* mbox, Eterm* out_msg);
+BEAM_NODISCARD beam_result_t beam_mailbox_enqueue(beam_mailbox_t* mbox, Eterm message);
+BEAM_NODISCARD beam_result_t beam_mailbox_dequeue(beam_mailbox_t* mbox, Eterm* out_message);
 size_t beam_mailbox_count(const beam_mailbox_t* mbox);
 
-/* Process-to-Process Message Delivery */
-beam_result_t beam_message_send_to_process(beam_process_t* receiver, Eterm msg, const beam_allocator_i* alloc);
-beam_result_t beam_process_receive_message(beam_process_t* proc, Eterm* out_msg);
+/* High-level Process-to-Process Messaging */
+BEAM_NODISCARD beam_result_t beam_message_send_to_process(beam_process_t* target_proc, Eterm message, const beam_allocator_i* alloc);
 
 #endif /* BEAM_MESSAGING_H */

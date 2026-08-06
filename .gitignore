@@ -2,5 +2,6 @@ build/
 build_*/
 otp_src/
 benchmarks/reports/
+benchmarks/work/
 *.o
 *.a

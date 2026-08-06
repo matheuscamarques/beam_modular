@@ -17,4 +17,6 @@ Eterm bif_self_0(beam_process_t* proc, const Eterm* args, int arity);
 Eterm bif_add_2(beam_process_t* proc, const Eterm* args, int arity);
 Eterm bif_sub_2(beam_process_t* proc, const Eterm* args, int arity);
 
+BEAM_NODISCARD beam_result_t beam_bif_dispatch(size_t bif_index, beam_process_t* proc, const Eterm* args, int arity, Eterm* out_result);
+
 #endif /* BEAM_BIF_INTERNAL_H */
