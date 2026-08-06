@@ -1,0 +1,5 @@
+build/
+build_*/
+otp_src/
+*.o
+*.a
