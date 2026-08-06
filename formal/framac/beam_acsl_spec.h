@@ -27,4 +27,11 @@ int beam_op_allocate_acsl(void* proc, size_t words);
   @*/
 int beam_op_deallocate_acsl(void* proc, size_t words);
 
+/*@ 
+  @ requires \valid(proc);
+  @ requires proc->stack_top + words + 1 <= proc->heap_capacity;
+  @ ensures proc->stack_top == \old(proc->stack_top) + words + 1;
+  @*/
+int beam_op_call_last_acsl(void* proc, size_t target_label, size_t words);
+
 #endif /* BEAM_ACSL_SPEC_H */

@@ -22,15 +22,25 @@ Inductive Opcode : Type :=
   | OpAdd : Z -> Z -> Z -> Opcode
   | OpAllocate : Z -> Opcode
   | OpDeallocate : Z -> Opcode
+  | OpCallLast : Z -> Z -> Opcode
   | OpHalt : Opcode.
 
 Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame :=
   match op with
   | OpAllocate n => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) - n |}
   | OpDeallocate n => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) + n |}
+  | OpCallLast target n => {| x_regs := frame.(x_regs); ip := target; sp := frame.(sp) + n |}
   | OpHalt => frame
   | _ => frame
   end.
+
+Theorem tail_call_optimization_stack_preservation : forall (target n : Z) (f : EmulatorFrame),
+  (execute_opcode (OpCallLast target n) (execute_opcode (OpAllocate n) f)).(sp) = f.(sp).
+Proof.
+  intros target n f.
+  simpl.
+  ring.
+Qed.
 
 Theorem allocate_deallocate_stack_invariant : forall (n : Z) (f : EmulatorFrame),
   (execute_opcode (OpDeallocate n) (execute_opcode (OpAllocate n) f)).(sp) = f.(sp).
