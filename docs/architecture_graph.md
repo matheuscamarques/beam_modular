@@ -1,7 +1,7 @@
 # Architecture & Knowledge Graph
 
-**Last Commit**: `5756ff2a53f418d06fa46a04eccac72bc7d3295a`  
-**Supported Opcodes**: 21  
+**Last Commit**: `5464562b6797f0fc24e03e983e80e05b6960ddf6`  
+**Supported Opcodes**: 22  
 
 ## Component Dependency Graph
 
@@ -37,4 +37,5 @@ graph TD
 - `BEAM_OP_SELECT_VAL`
 - `BEAM_OP_CALL_EXT`
 - `BEAM_OP_CALL_LAST`
+- `BEAM_OP_MAKE_FUN2`
 - `BEAM_OP_HALT`

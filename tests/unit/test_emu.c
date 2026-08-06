@@ -263,6 +263,39 @@ void test_opcode_tail_call(void) {
     printf("  [PASSED] test_opcode_tail_call\n");
 }
 
+void test_opcode_make_fun2(void) {
+    printf("[UNIT TEST] Testing Closure Allocation (MAKE_FUN2)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_process_t* proc = beam_process_create(207, 128, &alloc);
+    assert(proc != NULL);
+
+    beam_instruction_t code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(77) },
+        { .opcode = BEAM_OP_MAKE_FUN2, .arg1 = 12, .arg2 = 1, .arg3 = 0 },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    Eterm result = 0;
+    beam_result_t res = beam_emu_execute_code(proc, code, sizeof(code)/sizeof(code[0]), &result);
+
+    assert(res == BEAM_ERR_HALT);
+    (void)res;
+    assert(beam_is_tuple(result));
+    assert(beam_tuple_arity(result) == 2);
+    assert(eterm_to_small_int(beam_tuple_element(result, 0)) == 12);
+    assert(eterm_to_small_int(beam_tuple_element(result, 1)) == 77);
+
+    beam_process_destroy(proc);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] Created Fun/Closure with label 12 and free var 77 on heap cleanly!\n");
+    printf("  [PASSED] test_opcode_make_fun2\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: EMULATOR  \n");
@@ -274,5 +307,6 @@ int main(void) {
     test_opcode_select_val();
     test_opcode_call_ext();
     test_opcode_tail_call();
+    test_opcode_make_fun2();
     return 0;
 }

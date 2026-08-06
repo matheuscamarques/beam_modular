@@ -283,6 +283,28 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 break;
             }
 
+            case BEAM_OP_MAKE_FUN2: {
+                /* arg1: fun entry label, arg2: num_free_vars, arg3: dst_reg */
+                uint32_t fun_label = instr->arg1;
+                uint32_t num_free = instr->arg2;
+                uint32_t dst_reg = instr->arg3;
+                
+                /* Allocate Closure Header + Entry Label + Free Environment Variables on Process Heap */
+                Eterm* hp = beam_process_alloc_heap(proc, num_free + 2);
+                if (!hp) return BEAM_ERR_NO_MEMORY;
+                
+                hp[0] = (Eterm)((num_free + 1) << 6 | SUBTAG_TUPLE); /* Header tuple tag for Closure */
+                hp[1] = make_small_int(fun_label);
+                for (uint32_t fv = 0; fv < num_free; fv++) {
+                    hp[2 + fv] = (fv < BEAM_NUM_X_REGISTERS) ? frame->x_regs[fv] : 0;
+                }
+                
+                if (dst_reg < BEAM_NUM_X_REGISTERS) {
+                    frame->x_regs[dst_reg] = (Eterm)((uintptr_t)hp | TAG_PRIMARY_BOXED);
+                }
+                break;
+            }
+
             case BEAM_OP_HALT: {
                 if (out_result) {
                     *out_result = frame->x_regs[0];
