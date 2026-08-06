@@ -160,6 +160,17 @@ Eterm beam_atom_intern(beam_atom_table_t* table, const char* name) {
     return atom_table_insert(table, name, len);
 }
 
+Eterm beam_atom_intern_length(beam_atom_table_t* table, const char* name, size_t len) {
+    if (!table || !name) return 0;
+
+    beam_atom_entry_t* existing = atom_table_find_entry(table, name, len);
+    if (existing) {
+        return atom_eterm(existing->index);
+    }
+
+    return atom_table_insert(table, name, len);
+}
+
 const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term) {
     if (!table) return NULL;
     if ((atom_term & 0x0F) != TAG_IMMED1_ATOM) return NULL;

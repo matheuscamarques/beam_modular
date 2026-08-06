@@ -18,6 +18,7 @@ BEAM_NODISCARD beam_atom_table_t* beam_atom_table_create(const beam_allocator_i*
 void beam_atom_table_destroy(beam_atom_table_t* table);
 
 BEAM_NODISCARD Eterm beam_atom_intern(beam_atom_table_t* table, const char* name);
+BEAM_NODISCARD Eterm beam_atom_intern_length(beam_atom_table_t* table, const char* name, size_t len);
 const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term);
 size_t beam_atom_table_count(const beam_atom_table_t* table);
 

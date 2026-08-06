@@ -36,8 +36,15 @@ void test_atom_table_isolated(void) {
 
     const char* name_err = beam_atom_lookup(table, atom_err);
     assert(name_err != NULL && strcmp(name_err, "error") == 0);
+
+    /* Test length-bounded atom interning */
+    Eterm atom_len = beam_atom_intern_length(table, "length_atom_test", 11);
+    const char* name_len = beam_atom_lookup(table, atom_len);
+    assert(name_len != NULL && strcmp(name_len, "length_atom") == 0);
+
     (void)name_ok;
     (void)name_err;
+    (void)name_len;
 
     beam_atom_table_destroy(table);
 
