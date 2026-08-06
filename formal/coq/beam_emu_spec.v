@@ -24,6 +24,7 @@ Inductive Opcode : Type :=
   | OpDeallocate : Z -> Opcode
   | OpCallLast : Z -> Z -> Opcode
   | OpMakeFun2 : Z -> Z -> Z -> Opcode
+  | OpCallExt : Z -> Z -> Opcode
   | OpHalt : Opcode.
 
 Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame :=
@@ -32,6 +33,7 @@ Definition execute_opcode (op : Opcode) (frame : EmulatorFrame) : EmulatorFrame 
   | OpDeallocate n => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) + n |}
   | OpCallLast target n => {| x_regs := frame.(x_regs); ip := target; sp := frame.(sp) + n |}
   | OpMakeFun2 label n dst => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
+  | OpCallExt bif arity => {| x_regs := frame.(x_regs); ip := frame.(ip) + 1; sp := frame.(sp) |}
   | OpHalt => frame
   | _ => frame
   end.

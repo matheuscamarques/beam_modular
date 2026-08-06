@@ -33,11 +33,18 @@ void test_bif_dispatch(void) {
     (void)res;
     assert(eterm_to_small_int(res_add) == 50);
 
+    /* Test BIF 5: erlang:length/1 */
+    Eterm list = beam_make_list(proc, make_small_int(10), beam_make_list(proc, make_small_int(20), 0));
+    Eterm res_len = 0;
+    res = beam_bif_dispatch(5, proc, &list, 1, &res_len);
+    assert(res == BEAM_OK);
+    assert(eterm_to_small_int(res_len) == 2);
+
     beam_process_destroy(proc);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] BIF self/0 returned PID %u, BIF +/2 returned 50!\n", pid);
+    printf("  [RESULT] BIF self/0 returned PID %u, BIF +/2 returned 50, BIF length/1 returned 2!\n", pid);
     printf("  [MEMORY] Clean memory stats! Allocs: %zu, Frees: %zu\n", stats.alloc_count, stats.free_count);
     printf("[PASSED] test_bif_dispatch\n");
 }
