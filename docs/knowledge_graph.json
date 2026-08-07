@@ -1,5 +1,5 @@
 {
-  "commit": "4da30e7394c4d4940294119ef9d8a67174188de8",
+  "commit": "879c1844773abb4ba9243b6151d9abea84e8165b",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -276,6 +276,10 @@
     {
       "source": "memory/beam_gc_internal.h",
       "target": "beam_scheduler.h"
+    },
+    {
+      "source": "memory/beam_gc_internal.h",
+      "target": "stdint.h"
     },
     {
       "source": "memory/beam_gc.c",
