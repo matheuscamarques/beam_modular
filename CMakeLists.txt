@@ -39,7 +39,7 @@ if(ENABLE_BENCH)
     target_link_libraries(bench_alloc PRIVATE beam_memory_mod)
 
     add_executable(bench_msg benchmarks/drivers/b/bench_msg.c)
-    target_link_libraries(bench_msg PRIVATE beam_messaging_mod beam_memory_mod)
+    target_link_libraries(bench_msg PRIVATE beam_messaging_mod beam_scheduler_mod beam_memory_mod)
 
     add_executable(bench_emu benchmarks/drivers/b/bench_emu.c)
     target_include_directories(bench_emu PRIVATE src/emulator)
