@@ -91,6 +91,40 @@ beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq) {
     return NULL;
 }
 
+beam_process_t* beam_run_queue_steal(beam_run_queue_t* rq) {
+    if (!rq) return NULL;
+
+    pthread_mutex_lock(&rq->lock);
+    if (rq->total_count == 0) {
+        pthread_mutex_unlock(&rq->lock);
+        return NULL;
+    }
+
+    /* Steal process from lowest priority queue with available items (LOW -> NORMAL -> HIGH -> MAX) */
+    for (int p = BEAM_NUM_PRIORITIES - 1; p >= 0; p--) {
+        priority_level_queue_t* q = &rq->queues[p];
+        if (q->head) {
+            run_queue_node_t* node = q->head;
+            beam_process_t* proc = node->proc;
+
+            q->head = node->next;
+            if (!q->head) {
+                q->tail = NULL;
+            }
+            q->count--;
+            rq->total_count--;
+            pthread_mutex_unlock(&rq->lock);
+
+            rq->alloc.free(rq->alloc.ctx, node);
+            beam_process_set_state(proc, BEAM_PROC_STATE_RUNNING);
+            return proc;
+        }
+    }
+
+    pthread_mutex_unlock(&rq->lock);
+    return NULL;
+}
+
 size_t beam_run_queue_count(const beam_run_queue_t* rq) {
     return rq ? rq->total_count : 0;
 }

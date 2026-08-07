@@ -63,6 +63,7 @@ void beam_run_queue_destroy(beam_run_queue_t* rq);
 
 BEAM_NODISCARD beam_result_t beam_run_queue_enqueue(beam_run_queue_t* rq, beam_process_t* proc, beam_priority_t prio);
 BEAM_NODISCARD beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq);
+BEAM_NODISCARD beam_process_t* beam_run_queue_steal(beam_run_queue_t* rq);
 size_t beam_run_queue_count(const beam_run_queue_t* rq);
 
 /* Preemption Scheduler Engine */

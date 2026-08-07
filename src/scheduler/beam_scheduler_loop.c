@@ -60,9 +60,24 @@ static void* scheduler_worker_thread(void* arg) {
     while (pool->running) {
         beam_result_t res = beam_scheduler_step(sched, pool->code, pool->code_len);
         if (res == BEAM_ERR_NOT_FOUND) {
-            /* No runnable process currently in queue: yield thread CPU time */
-            struct timespec ts = { .tv_sec = 0, .tv_nsec = 1000000 }; /* 1ms */
-            nanosleep(&ts, NULL);
+            /* Try Work-Stealing from global RunQueue */
+            beam_process_t* stolen_proc = beam_run_queue_steal(pool->run_queue);
+            if (stolen_proc) {
+                Eterm out_val = 0;
+                beam_result_t st_res = beam_emu_execute_code(stolen_proc, pool->code, pool->code_len, &out_val);
+                (void)out_val;
+
+                beam_process_state_t st_state = beam_process_get_state(stolen_proc);
+                if (st_state == BEAM_PROC_STATE_RUNNABLE || (st_res == BEAM_OK && st_state == BEAM_PROC_STATE_RUNNING)) {
+                    beam_process_set_reductions(stolen_proc, BEAM_DEFAULT_REDUCTIONS);
+                    beam_result_t enq_res = beam_run_queue_enqueue(pool->run_queue, stolen_proc, BEAM_PRIO_NORMAL);
+                    (void)enq_res;
+                }
+            } else {
+                /* No runnable process available to steal: yield thread CPU time */
+                struct timespec ts = { .tv_sec = 0, .tv_nsec = 1000000 }; /* 1ms */
+                nanosleep(&ts, NULL);
+            }
         }
     }
 

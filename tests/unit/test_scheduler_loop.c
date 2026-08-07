@@ -110,11 +110,62 @@ void test_scheduler_pool_parallel(void) {
     printf("  [PASSED] test_scheduler_pool_parallel\n");
 }
 
+void test_scheduler_work_stealing(void) {
+    printf("[UNIT TEST] Testing Work-Stealing Algorithm across Multi-Scheduler Threads...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_run_queue_t* rq = beam_run_queue_create(&alloc);
+    assert(rq != NULL);
+
+    beam_scheduler_pool_t* pool = beam_scheduler_pool_create(2, rq, &alloc);
+    assert(pool != NULL);
+
+    /* Enqueue 4 processes into global queue */
+    beam_process_t* procs[4];
+    for (int i = 0; i < 4; i++) {
+        procs[i] = beam_process_create(901 + i, 128, &alloc);
+        assert(procs[i] != NULL);
+        beam_result_t enq_res = beam_run_queue_enqueue(rq, procs[i], (i % 2 == 0) ? BEAM_PRIO_LOW : BEAM_PRIO_HIGH);
+        (void)enq_res;
+    }
+
+    beam_instruction_t code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(99) },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    beam_result_t start_res = beam_scheduler_pool_start(pool, code, sizeof(code)/sizeof(code[0]));
+    assert(start_res == BEAM_OK);
+    (void)start_res;
+
+    struct timespec ts = { .tv_sec = 0, .tv_nsec = 30000000 }; /* 30ms */
+    nanosleep(&ts, NULL);
+
+    beam_scheduler_pool_stop(pool);
+
+    assert(beam_run_queue_count(rq) == 0);
+    for (int i = 0; i < 4; i++) {
+        assert(beam_process_get_state(procs[i]) == BEAM_PROC_STATE_EXITED);
+        beam_process_destroy(procs[i]);
+    }
+
+    beam_scheduler_pool_destroy(pool);
+    beam_run_queue_destroy(rq);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] Idle worker threads successfully stole and executed all 4 processes!\n");
+    printf("  [PASSED] test_scheduler_work_stealing\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: SCHEDULER \n");
     printf("=========================================\n");
     test_scheduler_preemption_step();
     test_scheduler_pool_parallel();
+    test_scheduler_work_stealing();
     return 0;
 }

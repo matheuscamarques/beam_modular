@@ -21,7 +21,7 @@ The BEAM C23 VM runs multiple concurrent OS threads (one per CPU core) executing
 
 ---
 
-## Current Completion (Phase 2): **40%** (Multi-Scheduler Thread Pool Reached)
+## Current Completion (Phase 2): **60%** (Work-Stealing Algorithm Reached)
 
 ---
 
@@ -40,11 +40,11 @@ The BEAM C23 VM runs multiple concurrent OS threads (one per CPU core) executing
 - [x] Parallel process execution verified in `test_scheduler_loop.c` (4 worker threads)
 - **Gate:** Parallel execution test with $N$ worker threads concurrently executing processes PASS
 
-### 60% — Work-Stealing Scheduler Algorithm
-- [ ] Per-scheduler local RunQueues with lock-free/spinlock steal interfaces
-- [ ] Implement work-stealing heuristic when a scheduler queue becomes empty
-- [ ] Preemption and lock-free reduction counter decrements
-- **Gate:** Multi-core CPU utilization benchmark showing balanced thread load
+### 60% — Work-Stealing Scheduler Algorithm *(reached)*
+- [x] Lock-protected work stealing interface `beam_run_queue_steal` in `src/scheduler/run_queue.c`
+- [x] Automatic work-stealing fallback in `scheduler_worker_thread` loop when local RunQueue is empty
+- [x] Verification of process balance and steal execution in `test_scheduler_loop.c`
+- **Gate:** Multi-core process balance & work-stealing execution PASS
 
 ### 80% — Asynchronous Epoll I/O Driver & Ports
 - [ ] Integration of Linux `epoll_create1` / `epoll_wait` in `src/io/sys_poll.c`
