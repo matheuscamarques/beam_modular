@@ -68,7 +68,8 @@ int main(int argc, char** argv) {
 
     /* Delete evens (deterministic: same criterion as side A) */
     for (long i = 0; i < N; i += 2) {
-        beam_ets_delete(table, make_small_int(i));
+        beam_result_t del_res = beam_ets_delete(table, make_small_int(i));
+        (void)del_res;
     }
 
     /* Lookup remaining (odd) keys */

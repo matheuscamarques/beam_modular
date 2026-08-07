@@ -22,6 +22,12 @@ struct beam_process {
     /* Mailbox */
     beam_mailbox_t* mailbox;
 
+    /* Off-heap ref-counted binary payloads owned by this process (ProcBin).
+     * The GC releases payloads no longer reachable from process roots. */
+    void** offheap_payloads;
+    size_t offheap_count;
+    size_t offheap_capacity;
+
     /* Execution Frame */
     beam_emulator_frame_t frame;
 
