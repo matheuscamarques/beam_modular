@@ -5,19 +5,21 @@
 #include "beam_scheduler.h"
 
 #include <pthread.h>
+#include <stdatomic.h>
 
 typedef struct beam_message beam_message_t;
 
 struct beam_message {
     Eterm body;
-    beam_message_t* next;
+    _Atomic(beam_message_t*) next;
 };
 
 struct beam_mailbox {
     beam_message_t* head;
-    beam_message_t* tail;
+    _Atomic(beam_message_t*) tail;
     beam_message_t* save_cursor;
     beam_message_t* save_prev;
+    _Atomic(size_t) atomic_count;
     size_t count;
     pthread_mutex_t lock;
     beam_allocator_i alloc;

@@ -34,18 +34,18 @@ beam_result_t beam_mailbox_enqueue(beam_mailbox_t* mbox, Eterm msg) {
     if (!node) return BEAM_ERR_NO_MEMORY;
 
     node->body = msg;
-    node->next = NULL;
+    atomic_init(&node->next, NULL);
 
-    pthread_mutex_lock(&mbox->lock);
-    if (!mbox->tail) {
+    /* Lock-Free Atomic Enqueue using atomic_exchange on tail pointer */
+    beam_message_t* prev_tail = atomic_exchange(&mbox->tail, node);
+    if (!prev_tail) {
         mbox->head = node;
-        mbox->tail = node;
     } else {
-        mbox->tail->next = node;
-        mbox->tail = node;
+        atomic_store(&prev_tail->next, node);
     }
+
+    atomic_fetch_add(&mbox->atomic_count, 1);
     mbox->count++;
-    pthread_mutex_unlock(&mbox->lock);
 
     return BEAM_OK;
 }
@@ -57,11 +57,12 @@ beam_result_t beam_mailbox_dequeue(beam_mailbox_t* mbox, Eterm* out_msg) {
     beam_message_t* node = mbox->head;
     *out_msg = node->body;
 
-    mbox->head = node->next;
+    beam_message_t* next = atomic_load(&node->next);
+    mbox->head = next;
     if (!mbox->head) {
-        mbox->tail = NULL;
+        atomic_store(&mbox->tail, NULL);
     }
-    mbox->count--;
+    if (mbox->count > 0) mbox->count--;
     mbox->alloc.free(mbox->alloc.ctx, node);
     return BEAM_OK;
 }
@@ -89,20 +90,20 @@ beam_result_t beam_mailbox_remove_current(beam_mailbox_t* mbox) {
     if (!mbox || !mbox->save_cursor) return BEAM_ERR_NOT_FOUND;
 
     beam_message_t* target = mbox->save_cursor;
-    beam_message_t* next = target->next;
+    beam_message_t* next = atomic_load(&target->next);
 
     if (mbox->save_prev) {
-        mbox->save_prev->next = next;
+        atomic_store(&mbox->save_prev->next, next);
     } else {
         mbox->head = next;
     }
 
-    if (target == mbox->tail) {
-        mbox->tail = mbox->save_prev;
+    if (target == atomic_load(&mbox->tail)) {
+        atomic_store(&mbox->tail, mbox->save_prev);
     }
 
     mbox->save_cursor = next;
-    mbox->count--;
+    if (mbox->count > 0) mbox->count--;
     mbox->alloc.free(mbox->alloc.ctx, target);
     return BEAM_OK;
 }

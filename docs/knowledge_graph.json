@@ -1,5 +1,5 @@
 {
-  "commit": "304725d48aadf9656eea17f629607a8676509a3e",
+  "commit": "e5e01072123ee3e4bb43e9d208cad094f5e2af6f",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -324,6 +324,10 @@
     {
       "source": "messaging/erl_message_internal.h",
       "target": "pthread.h"
+    },
+    {
+      "source": "messaging/erl_message_internal.h",
+      "target": "stdatomic.h"
     },
     {
       "source": "global/dist_node.c",

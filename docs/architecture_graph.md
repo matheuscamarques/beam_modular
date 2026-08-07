@@ -1,6 +1,6 @@
 # Architecture & Knowledge Graph
 
-**Last Commit**: `304725d48aadf9656eea17f629607a8676509a3e`  
+**Last Commit**: `e5e01072123ee3e4bb43e9d208cad094f5e2af6f`  
 **Supported Opcodes**: 34  
 
 ## Component Dependency Graph

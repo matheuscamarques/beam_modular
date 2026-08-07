@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include "beam_core.h"
 #include "beam_global.h"
@@ -103,11 +104,70 @@ void test_process_to_process_messaging(void) {
     printf("  [PASSED] test_process_to_process_messaging\n");
 }
 
+typedef struct {
+    beam_mailbox_t* mbox;
+    int count;
+} concurrent_sender_arg_t;
+
+static void* concurrent_sender_thread(void* arg) {
+    concurrent_sender_arg_t* sarg = (concurrent_sender_arg_t*)arg;
+    for (int i = 0; i < sarg->count; i++) {
+        beam_result_t res = beam_mailbox_enqueue(sarg->mbox, make_small_int(i));
+        assert(res == BEAM_OK);
+        (void)res;
+    }
+    return NULL;
+}
+
+void test_lock_free_concurrent_mailbox(void) {
+    printf("[UNIT TEST] Testing Lock-Free Atomic Mailbox (4 Threads Enqueuing 1000 Msgs)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_mailbox_t* mbox = beam_mailbox_create(&alloc);
+    assert(mbox != NULL);
+
+    pthread_t threads[4];
+    concurrent_sender_arg_t args[4];
+
+    for (int i = 0; i < 4; i++) {
+        args[i].mbox = mbox;
+        args[i].count = 250;
+        int p_res = pthread_create(&threads[i], NULL, concurrent_sender_thread, &args[i]);
+        assert(p_res == 0);
+        (void)p_res;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    assert(beam_mailbox_count(mbox) == 1000);
+
+    /* Dequeue all 1000 messages */
+    int count = 0;
+    Eterm msg;
+    while (beam_mailbox_dequeue(mbox, &msg) == BEAM_OK) {
+        count++;
+    }
+    assert(count == 1000);
+    assert(beam_mailbox_count(mbox) == 0);
+
+    beam_mailbox_destroy(mbox);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] 4 Concurrent threads enqueued 1000 messages to lock-free mailbox without data loss!\n");
+    printf("  [PASSED] test_lock_free_concurrent_mailbox\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: MESSAGING \n");
     printf("=========================================\n");
     test_mailbox_queue();
     test_process_to_process_messaging();
+    test_lock_free_concurrent_mailbox();
     return 0;
 }
