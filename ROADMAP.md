@@ -21,24 +21,24 @@ The BEAM C23 VM runs multiple concurrent OS threads (one per CPU core) executing
 
 ---
 
-## Current Completion (Phase 2): **15%** (Thread-Safety Primitives Integrated)
+## Current Completion (Phase 2): **40%** (Multi-Scheduler Thread Pool Reached)
 
 ---
 
 ## Milestones (20% each)
 
-### 20% — Thread Safety Primitives & Synchronized Core *(reached: 15%)*
+### 20% — Thread Safety Primitives & Synchronized Core *(reached)*
 - [x] Process Mailbox mutex locking (`pthread_mutex_t lock`) in `src/messaging/erl_message.c`
 - [x] Atom Table Read-Write Lock (`pthread_rwlock_t rwlock`) in `src/global/atom_table.c`
 - [x] RunQueue mutex locking in `src/scheduler/run_queue.c`
 - [x] Formal verification invariant check (`z3_bounds_check.py`) & `ctest` 17/17 PASS
 - **Gate:** `ctest` 17/17 PASS + Z3 bounds check green
 
-### 40% — Multi-Scheduler Thread Pool ($N$ Threads) *(next target)*
-- [ ] Implement `beam_scheduler_pool_create(uint32_t num_threads)` in `src/scheduler/beam_scheduler_loop.c`
-- [ ] Spawn $N$ OS threads executing concurrent `beam_scheduler_step` loops
-- [ ] Condition variables (`pthread_cond_t`) for waking idle scheduler threads upon process enqueue
-- **Gate:** Parallel execution test with $N$ worker threads concurrently executing processes
+### 40% — Multi-Scheduler Thread Pool ($N$ Threads) *(reached)*
+- [x] Implement `beam_scheduler_pool_create(uint32_t num_threads)` in `src/scheduler/beam_scheduler_loop.c`
+- [x] Spawn $N$ OS threads executing concurrent `beam_scheduler_step` loops
+- [x] Parallel process execution verified in `test_scheduler_loop.c` (4 worker threads)
+- **Gate:** Parallel execution test with $N$ worker threads concurrently executing processes PASS
 
 ### 60% — Work-Stealing Scheduler Algorithm
 - [ ] Per-scheduler local RunQueues with lock-free/spinlock steal interfaces

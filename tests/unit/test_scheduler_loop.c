@@ -1,6 +1,8 @@
+#define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
 
 #include "beam_core.h"
 #include "beam_scheduler.h"
@@ -57,10 +59,62 @@ void test_scheduler_preemption_step(void) {
     printf("  [PASSED] test_scheduler_preemption_step\n");
 }
 
+void test_scheduler_pool_parallel(void) {
+    printf("[UNIT TEST] Testing Multi-Scheduler Thread Pool (4 Parallel Worker Threads)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_run_queue_t* rq = beam_run_queue_create(&alloc);
+    assert(rq != NULL);
+
+    beam_scheduler_pool_t* pool = beam_scheduler_pool_create(4, rq, &alloc);
+    assert(pool != NULL);
+
+    beam_process_t* proc1 = beam_process_create(801, 128, &alloc);
+    beam_process_t* proc2 = beam_process_create(802, 128, &alloc);
+    assert(proc1 != NULL && proc2 != NULL);
+
+    beam_result_t enq1 = beam_run_queue_enqueue(rq, proc1, BEAM_PRIO_NORMAL);
+    beam_result_t enq2 = beam_run_queue_enqueue(rq, proc2, BEAM_PRIO_HIGH);
+    (void)enq1;
+    (void)enq2;
+
+    beam_instruction_t code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(42) },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    beam_result_t start_res = beam_scheduler_pool_start(pool, code, sizeof(code)/sizeof(code[0]));
+    assert(start_res == BEAM_OK);
+    (void)start_res;
+
+    /* Wait briefly for worker threads to consume processes */
+    struct timespec ts = { .tv_sec = 0, .tv_nsec = 20000000 }; /* 20ms */
+    nanosleep(&ts, NULL);
+
+    beam_scheduler_pool_stop(pool);
+
+    assert(beam_run_queue_count(rq) == 0);
+    assert(beam_process_get_state(proc1) == BEAM_PROC_STATE_EXITED);
+    assert(beam_process_get_state(proc2) == BEAM_PROC_STATE_EXITED);
+
+    beam_process_destroy(proc1);
+    beam_process_destroy(proc2);
+    beam_scheduler_pool_destroy(pool);
+    beam_run_queue_destroy(rq);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] 4 Parallel Worker Threads executed 2 concurrent processes to HALT cleanly!\n");
+    printf("  [PASSED] test_scheduler_pool_parallel\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: SCHEDULER \n");
     printf("=========================================\n");
     test_scheduler_preemption_step();
+    test_scheduler_pool_parallel();
     return 0;
 }

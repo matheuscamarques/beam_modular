@@ -1,5 +1,5 @@
 {
-  "commit": "be3a02694e7a5e76a1f0934fb9fbbdd559b06498",
+  "commit": "342e34a42b9f74f61fab7c2289543fb93cf33813",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -70,6 +70,10 @@
       "target": "beam_scheduler.h"
     },
     {
+      "source": "scheduler/beam_scheduler_loop_internal.h",
+      "target": "pthread.h"
+    },
+    {
       "source": "scheduler/run_queue_internal.h",
       "target": "beam_scheduler.h"
     },
@@ -100,6 +104,10 @@
     {
       "source": "scheduler/beam_scheduler_loop.c",
       "target": "string.h"
+    },
+    {
+      "source": "scheduler/beam_scheduler_loop.c",
+      "target": "time.h"
     },
     {
       "source": "emulator/beam_emu.c",

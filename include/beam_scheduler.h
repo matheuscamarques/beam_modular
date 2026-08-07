@@ -68,7 +68,14 @@ size_t beam_run_queue_count(const beam_run_queue_t* rq);
 /* Preemption Scheduler Engine */
 BEAM_NODISCARD beam_scheduler_t* beam_scheduler_create(uint32_t scheduler_id, beam_run_queue_t* rq, const beam_allocator_i* alloc);
 void beam_scheduler_destroy(beam_scheduler_t* sched);
-
 BEAM_NODISCARD beam_result_t beam_scheduler_step(beam_scheduler_t* sched, const beam_instruction_t* code, size_t code_len);
+
+/* Multi-Scheduler Thread Pool (SMP) */
+typedef struct beam_scheduler_pool beam_scheduler_pool_t;
+
+BEAM_NODISCARD beam_scheduler_pool_t* beam_scheduler_pool_create(uint32_t num_workers, beam_run_queue_t* rq, const beam_allocator_i* alloc);
+void beam_scheduler_pool_destroy(beam_scheduler_pool_t* pool);
+BEAM_NODISCARD beam_result_t beam_scheduler_pool_start(beam_scheduler_pool_t* pool, const beam_instruction_t* code, size_t code_len);
+void beam_scheduler_pool_stop(beam_scheduler_pool_t* pool);
 
 #endif /* BEAM_SCHEDULER_H */
