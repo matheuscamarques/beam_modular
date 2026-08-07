@@ -29,11 +29,17 @@ void test_distributed_node_table(void) {
     assert(beam_node_table_is_connected(nt, "node2@cluster.local") == true);
     assert(beam_node_table_is_connected(nt, "unknown@node") == false);
 
+    /* Test EPMD Registration & Custom Port Connection */
+    assert(beam_node_epmd_register("node3@cluster.local", 4370) == BEAM_OK);
+    assert(beam_node_table_connect_port(nt, "node3@cluster.local", 4370) == BEAM_OK);
+    assert(beam_node_table_count(nt) == 3);
+    assert(beam_node_table_is_connected(nt, "node3@cluster.local") == true);
+
     beam_node_table_destroy(nt);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] Distributed nodes connected & verified cleanly!\n");
+    printf("  [RESULT] Distributed nodes & EPMD handshake connected & verified cleanly!\n");
     printf("  [PASSED] test_distributed_node_table\n");
 }
 

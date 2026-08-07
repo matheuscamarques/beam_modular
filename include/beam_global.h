@@ -51,6 +51,8 @@ BEAM_NODISCARD beam_node_table_t* beam_node_table_create(const beam_allocator_i*
 void beam_node_table_destroy(beam_node_table_t* nt);
 
 BEAM_NODISCARD beam_result_t beam_node_table_connect(beam_node_table_t* nt, const char* node_name);
+BEAM_NODISCARD beam_result_t beam_node_table_connect_port(beam_node_table_t* nt, const char* node_name, uint16_t port);
+BEAM_NODISCARD beam_result_t beam_node_epmd_register(const char* node_name, uint16_t port);
 bool beam_node_table_is_connected(const beam_node_table_t* nt, const char* node_name);
 size_t beam_node_table_count(const beam_node_table_t* nt);
 
