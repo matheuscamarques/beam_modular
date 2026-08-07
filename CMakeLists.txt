@@ -84,6 +84,10 @@ target_include_directories(beam_mocks PUBLIC tests/mocks)
 add_executable(beam_core_bin src/core/beam_main.c)
 target_link_libraries(beam_core_bin PRIVATE beam_core_mod)
 
+add_executable(run_erlang_demo src/core/run_erlang_demo.c)
+target_include_directories(run_erlang_demo PRIVATE src/emulator)
+target_link_libraries(run_erlang_demo PRIVATE beam_core_mod)
+
 # Unit & Integration Tests
 enable_testing()
 
