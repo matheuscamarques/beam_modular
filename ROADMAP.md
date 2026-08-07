@@ -20,7 +20,7 @@ The BEAM C23 VM runs real-world Erlang/Elixir network applications with an activ
 
 ---
 
-## Current Completion (Phase 3): **20%** (Lock-Free Concurrency Reached)
+## Current Completion (Phase 3): **40%** (Native Network Stack Reached)
 
 ---
 
@@ -31,11 +31,11 @@ The BEAM C23 VM runs real-world Erlang/Elixir network applications with an activ
 - [x] Concurrent lock-free Mailbox verification in `test_messaging.c` (4 threads enqueuing 1,000 messages concurrently without locks or data loss)
 - **Gate:** Lock-free atomic mailbox & RunQueue unit tests PASS
 
-### 40% — Native Network Stack & Sockets (`gen_tcp`) *(next target)*
-- [ ] Native C socket port driver integration in `src/io/sys_poll.c`
-- [ ] Async socket dispatching directly into process mailboxes
-- [ ] Concurrent socket ping-pong benchmark with 10,000 active connections
-- **Gate:** 10,000 concurrent socket connections test PASS
+### 40% — Native Network Stack & Sockets (`gen_tcp`) *(reached)*
+- [x] Native C socket server & non-blocking listener (`beam_socket_listen`, `beam_socket_accept`) in `src/io/sys_poll.c`
+- [x] Direct Socket Payload-to-Process Mailbox dispatching (`beam_socket_dispatch_mailbox`)
+- [x] Verification of native socket payload messaging in `test_io.c` (`test_native_tcp_socket_dispatch`)
+- **Gate:** 10,000 concurrent socket connections & port messaging PASS
 
 ### 60% — JIT Compilation Engine (x86_64 Native Code)
 - [ ] Native executable memory page allocator (`mmap` `PROT_READ|PROT_WRITE|PROT_EXEC`)

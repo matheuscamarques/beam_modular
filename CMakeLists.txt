@@ -68,6 +68,7 @@ target_include_directories(beam_global_mod PRIVATE src/global)
 
 add_library(beam_io_mod STATIC src/io/sys_poll.c src/io/erl_nif.c)
 target_include_directories(beam_io_mod PRIVATE src/io)
+target_link_libraries(beam_io_mod PRIVATE beam_messaging_mod)
 
 add_library(beam_core_mod STATIC src/core/beam_vm.c)
 target_include_directories(beam_core_mod PRIVATE src/core)
@@ -110,7 +111,7 @@ target_link_libraries(test_run_queue PRIVATE beam_scheduler_mod beam_messaging_m
 add_test(NAME test_run_queue COMMAND test_run_queue)
 
 add_executable(test_io tests/unit/test_io.c)
-target_link_libraries(test_io PRIVATE beam_io_mod beam_mocks)
+target_link_libraries(test_io PRIVATE beam_io_mod beam_scheduler_mod beam_messaging_mod beam_mocks)
 add_test(NAME test_io COMMAND test_io)
 
 add_executable(test_beam_loader tests/unit/test_beam_loader.c)

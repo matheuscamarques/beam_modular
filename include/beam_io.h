@@ -25,6 +25,11 @@ void beam_io_poller_destroy(beam_io_poller_t* poller);
 BEAM_NODISCARD beam_result_t beam_io_poller_register(beam_io_poller_t* poller, int fd, uint32_t events_mask);
 BEAM_NODISCARD beam_result_t beam_io_poller_poll(beam_io_poller_t* poller, int timeout_ms, int* out_ready_count);
 
+/* Native C Socket Server & Port Messaging Operations (gen_tcp) */
+BEAM_NODISCARD int beam_socket_listen(uint16_t port);
+BEAM_NODISCARD int beam_socket_accept(int server_fd);
+BEAM_NODISCARD beam_result_t beam_socket_dispatch_mailbox(beam_process_t* proc, int client_fd, const beam_allocator_i* alloc);
+
 /* NIF C-Extension Environment Operations */
 BEAM_NODISCARD ErlNifEnv* enif_alloc_env(const beam_allocator_i* alloc, beam_process_t* proc);
 void enif_free_env(ErlNifEnv* env);

@@ -4,6 +4,7 @@
 
 #include "beam_core.h"
 #include "beam_io.h"
+#include "beam_scheduler.h"
 #include "mock_memory.h"
 
 #include <unistd.h>
@@ -48,10 +49,49 @@ void test_io_poller(void) {
     printf("[PASSED] test_io_poller\n");
 }
 
+#include "beam_messaging.h"
+
+void test_native_tcp_socket_dispatch(void) {
+    printf("[UNIT TEST] Testing Native TCP Socket Server & Process Mailbox Dispatch (gen_tcp)...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_process_t* proc = beam_process_create(1201, 128, &alloc);
+    assert(proc != NULL);
+
+    int sv[2] = {-1, -1};
+    assert(socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == 0);
+
+    const char* msg = "HELLO_BEAM_C23";
+    ssize_t w_res = write(sv[1], msg, 14);
+    assert(w_res == 14);
+    (void)w_res;
+
+    beam_result_t res = beam_socket_dispatch_mailbox(proc, sv[0], &alloc);
+    assert(res == BEAM_OK);
+
+    Eterm rec_msg = 0;
+    res = beam_process_receive_message(proc, &rec_msg);
+    assert(res == BEAM_OK);
+    (void)res;
+    assert(eterm_to_small_int(rec_msg) == 14);
+
+    close(sv[0]);
+    close(sv[1]);
+    beam_process_destroy(proc);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] Socket payload dispatched directly into Process Mailbox as message term!\n");
+    printf("[PASSED] test_native_tcp_socket_dispatch\n");
+}
+
 int main(void) {
     printf("=========================================\n");
     printf(" RUNNING ISOLATED MODULE TEST: I/O      \n");
     printf("=========================================\n");
     test_io_poller();
+    test_native_tcp_socket_dispatch();
     return 0;
 }

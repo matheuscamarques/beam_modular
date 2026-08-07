@@ -1,4 +1,5 @@
 #include "sys_poll_internal.h"
+#include "beam_messaging.h"
 #include <string.h>
 
 #include <unistd.h>
@@ -77,4 +78,63 @@ beam_result_t beam_io_poller_poll(beam_io_poller_t* poller, int timeout_ms, int*
 
     *out_events_ready = n;
     return BEAM_OK;
+}
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+
+int beam_socket_listen(uint16_t port) {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) return -1;
+
+    int opt = 1;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port = htons(port);
+
+    if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        close(fd);
+        return -1;
+    }
+
+    if (listen(fd, 128) < 0) {
+        close(fd);
+        return -1;
+    }
+
+    /* Set non-blocking mode */
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+    return fd;
+}
+
+int beam_socket_accept(int server_fd) {
+    if (server_fd < 0) return -1;
+
+    struct sockaddr_in client_addr;
+    socklen_t addr_len = sizeof(client_addr);
+    int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addr_len);
+    if (client_fd >= 0) {
+        int flags = fcntl(client_fd, F_GETFL, 0);
+        fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
+    }
+    return client_fd;
+}
+
+beam_result_t beam_socket_dispatch_mailbox(beam_process_t* proc, int client_fd, const beam_allocator_i* alloc) {
+    if (!proc || client_fd < 0) return BEAM_ERR_INVALID_ARG;
+
+    char buf[256];
+    ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
+    if (n <= 0) return BEAM_ERR_NOT_FOUND;
+
+    buf[n] = '\0';
+    Eterm msg_val = make_small_int((intptr_t)n);
+    return beam_message_send_to_process(proc, msg_val, alloc);
 }
