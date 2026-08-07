@@ -61,8 +61,28 @@ void test_ets_table(void) {
     assert(res == BEAM_OK);
     assert(eterm_to_small_int(new_counter) == 105);
 
+    /* Test BAG table type (allows duplicate keys with different values, ignores identical pairs) */
+    beam_ets_table_t* ets_bag = beam_ets_table_create_typed("events_bag", 2 /* BAG */, 0 /* PUBLIC */, &alloc);
+    assert(ets_bag != NULL);
+
+    Eterm bag_key = beam_atom_intern(atoms, "event_log");
+    Eterm event1 = beam_atom_intern(atoms, "login");
+    Eterm event2 = beam_atom_intern(atoms, "logout");
+
+    res = beam_ets_insert(ets_bag, bag_key, event1);
+    assert(res == BEAM_OK);
+    res = beam_ets_insert(ets_bag, bag_key, event2);
+    assert(res == BEAM_OK);
+    assert(beam_ets_count(ets_bag) == 2);
+
+    /* Duplicate pair insert attempt -> ignored */
+    res = beam_ets_insert(ets_bag, bag_key, event1);
+    assert(res == BEAM_OK);
+    assert(beam_ets_count(ets_bag) == 2);
+
     (void)res;
 
+    beam_ets_table_destroy(ets_bag);
     beam_ets_table_destroy(ets);
     beam_atom_table_destroy(atoms);
 

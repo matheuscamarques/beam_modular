@@ -13,6 +13,8 @@ typedef struct ets_entry {
 
 struct beam_ets_table {
     char name[32];
+    beam_ets_type_t type;
+    beam_ets_protection_t protection;
     ets_entry_t** buckets;
     size_t bucket_count;
     size_t item_count;

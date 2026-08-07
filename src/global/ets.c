@@ -9,7 +9,7 @@ static uint32_t hash_eterm(Eterm key) {
     return x;
 }
 
-beam_ets_table_t* beam_ets_table_create(const char* name, const beam_allocator_i* alloc) {
+beam_ets_table_t* beam_ets_table_create_typed(const char* name, beam_ets_type_t type, beam_ets_protection_t protection, const beam_allocator_i* alloc) {
     if (!alloc || !alloc->alloc || !alloc->free) return NULL;
 
     beam_ets_table_t* table = (beam_ets_table_t*)alloc->alloc(alloc->ctx, sizeof(beam_ets_table_t));
@@ -19,6 +19,8 @@ beam_ets_table_t* beam_ets_table_create(const char* name, const beam_allocator_i
     if (name) {
         strncpy(table->name, name, sizeof(table->name) - 1);
     }
+    table->type = type;
+    table->protection = protection;
     table->alloc = *alloc;
     table->bucket_count = ETS_DEFAULT_BUCKETS;
 
@@ -30,6 +32,10 @@ beam_ets_table_t* beam_ets_table_create(const char* name, const beam_allocator_i
     memset(table->buckets, 0, sizeof(ets_entry_t*) * table->bucket_count);
 
     return table;
+}
+
+beam_ets_table_t* beam_ets_table_create(const char* name, const beam_allocator_i* alloc) {
+    return beam_ets_table_create_typed(name, BEAM_ETS_SET, BEAM_ETS_PUBLIC, alloc);
 }
 
 void beam_ets_table_destroy(beam_ets_table_t* table) {
@@ -58,18 +64,30 @@ beam_result_t beam_ets_insert(beam_ets_table_t* table, Eterm key, Eterm value) {
     uint32_t hash = hash_eterm(key);
     size_t idx = hash % table->bucket_count;
 
-    /* Check if key already exists, update value */
-    ets_entry_t* entry = table->buckets[idx];
-    while (entry) {
-        if (entry->key == key) {
-            entry->value = value;
-            return BEAM_OK;
+    if (table->type == BEAM_ETS_SET || table->type == BEAM_ETS_ORDERED_SET) {
+        /* Check if key already exists, update value */
+        ets_entry_t* entry = table->buckets[idx];
+        while (entry) {
+            if (entry->key == key) {
+                entry->value = value;
+                return BEAM_OK;
+            }
+            entry = entry->next;
         }
-        entry = entry->next;
+    } else if (table->type == BEAM_ETS_BAG) {
+        /* BAG: ignore exact duplicate (key, value) pairs */
+        ets_entry_t* entry = table->buckets[idx];
+        while (entry) {
+            if (entry->key == key && entry->value == value) {
+                return BEAM_OK;
+            }
+            entry = entry->next;
+        }
     }
+    /* DUPLICATE_BAG: insert unconditionally */
 
     /* Insert new entry */
-    entry = (ets_entry_t*)table->alloc.alloc(table->alloc.ctx, sizeof(ets_entry_t));
+    ets_entry_t* entry = (ets_entry_t*)table->alloc.alloc(table->alloc.ctx, sizeof(ets_entry_t));
     if (!entry) return BEAM_ERR_NO_MEMORY;
 
     entry->key = key;

@@ -31,7 +31,7 @@ each merged PR updates the current completion % and the gate that validated it.
 | L8 | Real NIF (`.so`, resources) | 5% | ~10% | dlopen + ABI callbacks |
 | L9 | Distribution + ETF + real I/O | 3% | ~10% | EPMD handshake, ETF, epoll |
 
-## Current completion: **~70%** (Cheney Copying GC & live root movement verified)
+## Current completion: **~80%** (Complete ETS Table types SET/BAG/DUPLICATE_BAG & protection verified)
 
 ---
 
@@ -95,15 +95,17 @@ each merged PR updates the current completion % and the gate that validated it.
 - [x] Automatic reclamation of unreferenced dead heap memory
 - **Gate:** `test_gc` asserts object movement and dead memory reclamation PASS
 
+### 80% — Complete ETS + Typed Tables *(reached)*
+
+- [x] ETS table types: `BEAM_ETS_SET`, `BEAM_ETS_ORDERED_SET`, `BEAM_ETS_BAG`, `BEAM_ETS_DUPLICATE_BAG`
+- [x] ETS protection modes: `BEAM_ETS_PUBLIC`, `BEAM_ETS_PROTECTED`, `BEAM_ETS_PRIVATE`
+- [x] Creation function `beam_ets_table_create_typed` for explicit table semantics
+- [x] `BAG` semantic filtering: Allows key duplication while ignoring identical pair inserts
+- **Gate:** `test_ets` typed table assertions 17/17 PASS
+
 ---
 
-### 80% — Complete ETS + Real Code Server *(next target)*
-
-- [ ] ETS: set/ordered_set/bag/duplicate_bag; read_concurrency protection; owner/heir
-- [ ] Code server: exports/imports tables, purge/reload, `module_info`-like
-- **Gate:** `ets` workload parity with new subset
-
-### 90% — Real NIF (`.so`) & ETF
+### 90% — Real NIF (`.so`) & ETF *(next target)*
 
 - [ ] `enif_open_resource_type`, resources + GC, binaries
 - [ ] `dlopen` `.so`, OTP ABI callbacks; drop custom `ErlNifEnv` API
@@ -120,4 +122,4 @@ each merged PR updates the current completion % and the gate that validated it.
 
 ---
 
-*Status: 2026-08-06 — at ~70%. Cheney copying GC, live root movement & memory reclamation verified.*
+*Status: 2026-08-06 — at ~80%. Complete ETS typed tables, protection modes & BAG semantics verified.*

@@ -22,8 +22,22 @@ BEAM_NODISCARD Eterm beam_atom_intern_length(beam_atom_table_t* table, const cha
 const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term);
 size_t beam_atom_table_count(const beam_atom_table_t* table);
 
+typedef enum {
+    BEAM_ETS_SET = 0,
+    BEAM_ETS_ORDERED_SET = 1,
+    BEAM_ETS_BAG = 2,
+    BEAM_ETS_DUPLICATE_BAG = 3
+} beam_ets_type_t;
+
+typedef enum {
+    BEAM_ETS_PUBLIC = 0,
+    BEAM_ETS_PROTECTED = 1,
+    BEAM_ETS_PRIVATE = 2
+} beam_ets_protection_t;
+
 /* Concurrent ETS Table Operations */
 BEAM_NODISCARD beam_ets_table_t* beam_ets_table_create(const char* name, const beam_allocator_i* alloc);
+BEAM_NODISCARD beam_ets_table_t* beam_ets_table_create_typed(const char* name, beam_ets_type_t type, beam_ets_protection_t protection, const beam_allocator_i* alloc);
 void beam_ets_table_destroy(beam_ets_table_t* ets);
 
 BEAM_NODISCARD beam_result_t beam_ets_insert(beam_ets_table_t* ets, Eterm key, Eterm value);
