@@ -31,7 +31,7 @@ each merged PR updates the current completion % and the gate that validated it.
 | L8 | Real NIF (`.so`, resources) | 5% | ~10% | dlopen + ABI callbacks |
 | L9 | Distribution + ETF + real I/O | 3% | ~10% | EPMD handshake, ETF, epoll |
 
-## Current completion: **~55%** (Selective receive, unified stack, TCO, BIFs & AI Formal Harness verified)
+## Current completion: **~60%** (Exception handling & stack catch frames verified)
 
 ---
 
@@ -79,16 +79,17 @@ each merged PR updates the current completion % and the gate that validated it.
 - [x] Global ETS Atomic Counter: `beam_ets_update_counter` API
 - **Gate:** `test_emu` + `test_bif` + `test_ets` 17/17 PASS
 
+### 60% — Exception Handling & Stack Catch Frames *(reached)*
+
+- [x] `TRY`, `TRY_CASE`, `CATCH`, `TRY_END`, `RAISE` opcodes
+- [x] Exception stack frame unwinding (`catch_stack`, `catch_depth`, `catch_sp`, `catch_ip`)
+- [x] Coq/Rocq theorems for try/catch depth balance, guarded raise unwinding & handler targeting
+- [x] Frama-C / ACSL contracts (`beam_op_try_acsl`, `beam_op_raise_acsl`, `beam_op_try_end_acsl`)
+- **Gate:** `test_emu` try/catch unwinding 17/17 PASS
+
 ---
 
-### 60% — Exception Handling & Stack Catch Frames *(next target)*
-
-- [ ] `TRY`, `TRY_CASE`, `CATCH`, `TRY_END`, `RAISE` opcodes
-- [ ] Exception stack frame unwinding (`catch_sp`, `catch_ip`)
-- [ ] Coq/Rocq and ACSL formal proofs for exception safety
-- **Gate:** `test_emu` try/catch unwinding PASS
-
-### 70% — Copying GC + Process Heaps
+### 70% — Copying GC + Process Heaps *(next target)*
 
 - [ ] Replace `beam_gc_collect_process` stub: from→to-space copy, roots = X/Y regs/stack/CP
 - [ ] Off-Heap Ref-Counted Binaries (`ProcBin`) memory release & destruction
@@ -118,4 +119,4 @@ each merged PR updates the current completion % and the gate that validated it.
 
 ---
 
-*Status: 2026-08-06 — at ~55%. Fully updated, formally verified with Coq/TLA+/Z3 SMT, and committed.*
+*Status: 2026-08-06 — at ~60%. Exception handling, formal Coq try/catch proofs & ACSL contracts verified.*

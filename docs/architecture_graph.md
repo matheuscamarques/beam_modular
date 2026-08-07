@@ -1,7 +1,7 @@
 # Architecture & Knowledge Graph
 
-**Last Commit**: `7e838b26ce7438001d0d08a1d3db9cb01c3c4e86`  
-**Supported Opcodes**: 28  
+**Last Commit**: `5c694bcc84cbe0d62b591d5805f644234668f715`  
+**Supported Opcodes**: 34  
 
 ## Component Dependency Graph
 
@@ -44,4 +44,10 @@ graph TD
 - `BEAM_OP_LOOP_REC_END`
 - `BEAM_OP_REMOVE_MESSAGE`
 - `BEAM_OP_WAIT`
+- `BEAM_OP_TRY`
+- `BEAM_OP_TRY_CASE`
+- `BEAM_OP_CATCH`
+- `BEAM_OP_TRY_END`
+- `BEAM_OP_RAISE`
+- `BEAM_OP_TRY_CASE_END`
 - `BEAM_OP_HALT`
