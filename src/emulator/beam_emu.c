@@ -181,6 +181,7 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                         frame->x_regs[dst_reg] = msg;
                     }
                 } else {
+                    beam_mailbox_reset_save_cursor(proc->mailbox);
                     JUMP_TO_LABEL(fail_label);
                     continue;
                 }

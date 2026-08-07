@@ -16,12 +16,11 @@ static Eterm gc_copy_term(Eterm term, Eterm* to_space, size_t* to_top, size_t to
 
         size_t new_idx = *to_top;
         to_space[new_idx] = make_small_int((intptr_t)arity);
-        *to_top += 1;
+        *to_top += words_needed;
 
         for (size_t i = 0; i < arity; i++) {
             Eterm elem = beam_tuple_element(term, i);
-            to_space[*to_top] = gc_copy_term(elem, to_space, to_top, to_cap);
-            *to_top += 1;
+            to_space[new_idx + 1 + i] = gc_copy_term(elem, to_space, to_top, to_cap);
         }
         return (Eterm)(((uintptr_t)&to_space[new_idx]) | TAG_PRIMARY_BOXED);
     }

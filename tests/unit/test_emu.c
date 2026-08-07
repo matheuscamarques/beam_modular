@@ -117,6 +117,7 @@ void test_opcode_messaging(void) {
 
     /* Test RECEIVE on empty mailbox -> Should transition to WAITING */
     beam_process_t* proc_empty = beam_process_create(503, 128, &alloc);
+    beam_process_reset_mailbox_cursor(proc_empty);
     res = beam_emu_execute_code(proc_empty, receiver_code, sizeof(receiver_code)/sizeof(receiver_code[0]), &res_val);
     assert(res == BEAM_OK);
     (void)res;
