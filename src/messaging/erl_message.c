@@ -124,3 +124,10 @@ beam_result_t beam_process_receive_message(beam_process_t* proc, Eterm* out_msg)
     if (!mbox) return BEAM_ERR_INVALID_ARG;
     return beam_mailbox_dequeue(mbox, out_msg);
 }
+
+void beam_process_reset_mailbox_cursor(beam_process_t* proc) {
+    beam_mailbox_t* mbox = beam_process_get_mailbox(proc);
+    if (mbox) {
+        beam_mailbox_reset_save_cursor(mbox);
+    }
+}

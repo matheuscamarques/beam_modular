@@ -28,6 +28,7 @@ void test_system_allocator(void) {
     (void)stats;
 
     alloc.free(alloc.ctx, ptr);
+    beam_allocator_destroy(&alloc);
 
     printf("[PASSED] test_system_allocator\n");
 }

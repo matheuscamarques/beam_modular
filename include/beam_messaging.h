@@ -20,5 +20,6 @@ size_t beam_mailbox_count(const beam_mailbox_t* mbox);
 
 /* High-level Process-to-Process Messaging */
 BEAM_NODISCARD beam_result_t beam_message_send_to_process(beam_process_t* target_proc, Eterm message, const beam_allocator_i* alloc);
+void beam_process_reset_mailbox_cursor(beam_process_t* proc);
 
 #endif /* BEAM_MESSAGING_H */
