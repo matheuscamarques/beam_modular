@@ -70,9 +70,12 @@ add_library(beam_io_mod STATIC src/io/sys_poll.c src/io/erl_nif.c)
 target_include_directories(beam_io_mod PRIVATE src/io)
 target_link_libraries(beam_io_mod PRIVATE beam_messaging_mod)
 
+add_library(beam_jit_mod STATIC src/jit/beam_jit.c)
+target_include_directories(beam_jit_mod PRIVATE src/jit)
+
 add_library(beam_core_mod STATIC src/core/beam_vm.c)
 target_include_directories(beam_core_mod PRIVATE src/core)
-target_link_libraries(beam_core_mod PRIVATE beam_memory_mod beam_scheduler_mod beam_emulator_mod beam_messaging_mod beam_global_mod beam_io_mod)
+target_link_libraries(beam_core_mod PRIVATE beam_memory_mod beam_scheduler_mod beam_emulator_mod beam_messaging_mod beam_global_mod beam_io_mod beam_jit_mod)
 
 add_library(beam_mocks STATIC tests/mocks/mock_memory.c)
 target_include_directories(beam_mocks PUBLIC tests/mocks)
@@ -83,6 +86,10 @@ target_link_libraries(beam_core_bin PRIVATE beam_core_mod)
 
 # Unit & Integration Tests
 enable_testing()
+
+add_executable(test_jit tests/unit/test_jit.c)
+target_link_libraries(test_jit PRIVATE beam_jit_mod beam_scheduler_mod beam_messaging_mod beam_mocks)
+add_test(NAME test_jit COMMAND test_jit)
 
 add_executable(test_dist_node tests/unit/test_dist_node.c)
 target_link_libraries(test_dist_node PRIVATE beam_global_mod beam_mocks)

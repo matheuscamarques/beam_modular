@@ -1,5 +1,5 @@
 {
-  "commit": "91d17152ca1bf24df99e0155a0e19d9153ef32e3",
+  "commit": "d0bd5ffd9cabbd57ccb98cdcadef07f6d9ca9a18",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -428,6 +428,26 @@
     {
       "source": "io/sys_poll_internal.h",
       "target": "pthread.h"
+    },
+    {
+      "source": "jit/beam_jit.c",
+      "target": "beam_jit_internal.h"
+    },
+    {
+      "source": "jit/beam_jit.c",
+      "target": "string.h"
+    },
+    {
+      "source": "jit/beam_jit.c",
+      "target": "unistd.h"
+    },
+    {
+      "source": "jit/beam_jit_internal.h",
+      "target": "beam_jit.h"
+    },
+    {
+      "source": "jit/beam_jit_internal.h",
+      "target": "sys/mman.h"
     }
   ],
   "formal_verification": {
