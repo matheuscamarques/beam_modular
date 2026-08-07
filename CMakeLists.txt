@@ -163,3 +163,7 @@ add_test(NAME test_ets COMMAND test_ets)
 add_executable(test_atom_table tests/unit/test_atom_table.c)
 target_link_libraries(test_atom_table PRIVATE beam_global_mod beam_mocks)
 add_test(NAME test_atom_table COMMAND test_atom_table)
+
+add_executable(test_industrial_prod tests/integration/test_industrial_prod.c)
+target_link_libraries(test_industrial_prod PRIVATE beam_core_mod beam_mocks)
+add_test(NAME test_industrial_prod COMMAND test_industrial_prod)
