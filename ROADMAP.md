@@ -1,63 +1,59 @@
-# Roadmap — BEAM Rewrite Phase 2 (SMP Multi-Threading & Distribution)
+# Roadmap — BEAM Rewrite Phase 3 (Industrial Hardening, JIT Compiler & Lock-Free Concurrency)
 
-> Goal: Transform the C23 BEAM Modular Monolith into a fully concurrent **Multi-Scheduler Thread Pool (SMP)** VM with Work-Stealing, Non-blocking Epoll I/O, Distribution (EPMD), and Production-Grade Thread Safety.
+> Goal: Elevate the C23 BEAM Modular VM to Industrial Production level with **Lock-Free Queues (`stdatomic.h`)**, **JIT Bytecode Compiler**, Native `gen_tcp` Network Drivers, and ThreadSanitizer Zero-Race Audit.
 
-## Definition of Done (Phase 2 - 100%)
+## Definition of Done (Phase 3 - 100%)
 
-The BEAM C23 VM runs multiple concurrent OS threads (one per CPU core) executing processes in parallel with work-stealing, lock-free/mutex-protected mailboxes, non-blocking I/O multiplexing (`epoll`), and distributed node clustering, passing all Helgrind/TSan race detectors and A/B benchmarks with full parity.
+The BEAM C23 VM runs real-world Erlang/Elixir network applications with an active JIT compiler translating hot bytecodes to native x86_64 machine code, lock-free process mailboxes and RunQueues, 10,000+ concurrent TCP socket ports, and 0 warnings under ThreadSanitizer and AddressSanitizer.
 
 ---
 
-## Phase 2 Layer Breakdown & Progress Metrics
+## Phase 3 Layer Breakdown & Progress Metrics
 
 | ID | Layer / Subsystem | Weight | Current Status | Validation Gate |
 |---|---|---|---|---|
-| **L0** | **Thread-Safety Primitives** | 15% | **100% (Completed)** | `pthread_mutex` & `pthread_rwlock` in Mailbox, RunQueue, AtomTable (`17/17 ctest PASS`) |
-| **L1** | **Multi-Scheduler Thread Pool** | 20% | **100% (Completed)** | `pthread_create` spawning $N$ parallel scheduler loops (`test_scheduler_pool_parallel`) |
-| **L2** | **Work-Stealing Scheduler** | 20% | **100% (Completed)** | Idle schedulers stealing processes from busy RunQueues (`test_scheduler_work_stealing`) |
-| **L3** | **Async Epoll Driver & Port I/O** | 20% | **100% (Completed)** | Non-blocking socket polling (`sys_poll.c` via Linux `epoll_wait`) for Process Ports (`test_io_poller`) |
-| **L4** | **Distributed Nodes & EPMD Handshake** | 15% | **100% (Completed)** | External node clustering, EPMD registration & custom port connection (`test_distributed_node_table`) |
-| **L5** | **Concurrency Race Audit (TSan & Helgrind)** | 10% | **100% (Completed)** | Clean execution under high stress with 0 memory leaks (`17/17 ctest PASS`) |
+| **L0** | **Lock-Free Concurrency (`stdatomic.h`)** | 20% | **0% (Next Target)** | Lock-free single-producer multi-consumer Mailbox & RunQueue (`stdatomic.h`) |
+| **L1** | **Native Network Driver (`gen_tcp`)** | 20% | **0%** | Non-blocking socket drivers integrated with `epoll` for 10,000+ ports |
+| **L2** | **JIT Compilation Engine (x86_64)** | 20% | **0%** | Bytecode-to-native machine code translation (`mmap` `PROT_EXEC`) |
+| **L3** | **ThreadSanitizer & ASan Audit** | 20% | **0%** | Automated CI pipeline with 0 race/leak warnings under 16 parallel threads |
+| **L4** | **Industrial Production Parity** | 20% | **0%** | 24-hour continuous stress execution without memory growth |
 
 ---
 
-## Current Completion (Phase 2): **100%** (SMP Multi-Threading & Distribution Complete!)
+## Current Completion (Phase 3): **0%** (Phase 3 Initialized)
 
 ---
 
 ## Milestones (20% each)
 
-### 20% — Thread Safety Primitives & Synchronized Core *(reached)*
-- [x] Process Mailbox mutex locking (`pthread_mutex_t lock`) in `src/messaging/erl_message.c`
-- [x] Atom Table Read-Write Lock (`pthread_rwlock_t rwlock`) in `src/global/atom_table.c`
-- [x] RunQueue mutex locking in `src/scheduler/run_queue.c`
-- [x] Formal verification invariant check (`z3_bounds_check.py`) & `ctest` 17/17 PASS
-- **Gate:** `ctest` 17/17 PASS + Z3 bounds check green
+### 20% — Lock-Free Concurrency (`stdatomic.h`) *(next target)*
+- [ ] Implement lock-free atomic SPSC/MPMC queues in `src/messaging/erl_message.c`
+- [ ] Implement atomic lock-free RunQueue operations in `src/scheduler/run_queue.c`
+- [ ] A/B benchmark latency reduction verification under high thread contention
+- **Gate:** Lock-free atomic mailbox & RunQueue unit tests PASS
 
-### 40% — Multi-Scheduler Thread Pool ($N$ Threads) *(reached)*
-- [x] Implement `beam_scheduler_pool_create(uint32_t num_threads)` in `src/scheduler/beam_scheduler_loop.c`
-- [x] Spawn $N$ OS threads executing concurrent `beam_scheduler_step` loops
-- [x] Parallel process execution verified in `test_scheduler_loop.c` (4 worker threads)
-- **Gate:** Parallel execution test with $N$ worker threads concurrently executing processes PASS
+### 40% — Native Network Stack & Sockets (`gen_tcp`)
+- [ ] Native C socket port driver integration in `src/io/sys_poll.c`
+- [ ] Async socket dispatching directly into process mailboxes
+- [ ] Concurrent socket ping-pong benchmark with 10,000 active connections
+- **Gate:** 10,000 concurrent socket connections test PASS
 
-### 60% — Work-Stealing Scheduler Algorithm *(reached)*
-- [x] Lock-protected work stealing interface `beam_run_queue_steal` in `src/scheduler/run_queue.c`
-- [x] Automatic work-stealing fallback in `scheduler_worker_thread` loop when local RunQueue is empty
-- [x] Verification of process balance and steal execution in `test_scheduler_loop.c`
-- **Gate:** Multi-core process balance & work-stealing execution PASS
+### 60% — JIT Compilation Engine (x86_64 Native Code)
+- [ ] Native executable memory page allocator (`mmap` `PROT_READ|PROT_WRITE|PROT_EXEC`)
+- [ ] JIT compiler backend translating BEAM opcodes (`MOVE`, `ADD`, `CALL`) to x86_64
+- [ ] $3\times$ speedup verification in `emu_loop` benchmark over interpreted C23
+- **Gate:** Native machine code execution benchmark PASS
 
-### 80% — Asynchronous Epoll I/O Driver & Ports *(reached)*
-- [x] Integration of Linux `epoll_create1` & `epoll_wait` multiplexer in `src/io/sys_poll.c`
-- [x] Thread-safe event registration (`pthread_mutex_t lock`) for process descriptor ports
-- [x] Verification of non-blocking socket readiness notifications in `test_io.c`
-- **Gate:** Real Linux Epoll socket readiness notification PASS
+### 80% — ThreadSanitizer & Memory Safety Audit
+- [ ] AddressSanitizer (ASan) and ThreadSanitizer (TSan) build configurations
+- [ ] Zero race conditions under 16 parallel scheduler threads
+- **Gate:** Clean TSan & ASan execution with 0 warnings
 
-### 100% — Distribution, EPMD & Zero-Race Audit *(reached)*
-- [x] EPMD (Erlang Port Mapper Daemon) handshake registration & custom port connection in `src/global/dist_node.c`
-- [x] Read-Write Lock (`pthread_rwlock_t rwlock`) protection for node discovery and lookup
-- [x] Clean unit test execution with 0 memory leaks across 17/17 `ctest` suites
-- **Gate:** Distributed Erlang node table & EPMD handshake verification PASS
+### 100% — Industrial Production Parity
+- [ ] Real-world Erlang application execution end-to-end
+- [ ] 24-hour continuous stress execution without memory leak
+- **Gate:** Production readiness verification PASS
 
 ---
 
-*Status: 2026-08-06 — Phase 2 100% Complete! All SMP Multi-Threading & Distribution Milestones Reached.*
+*Status: 2026-08-06 — Phase 3 Initialized at 0% completion.*
