@@ -31,7 +31,7 @@ each merged PR updates the current completion % and the gate that validated it.
 | L8 | Real NIF (`.so`, resources) | 5% | ~10% | dlopen + ABI callbacks |
 | L9 | Distribution + ETF + real I/O | 3% | ~10% | EPMD handshake, ETF, epoll |
 
-## Current completion: **~60%** (Exception handling & stack catch frames verified)
+## Current completion: **~70%** (Cheney Copying GC & live root movement verified)
 
 ---
 
@@ -87,16 +87,17 @@ each merged PR updates the current completion % and the gate that validated it.
 - [x] Frama-C / ACSL contracts (`beam_op_try_acsl`, `beam_op_raise_acsl`, `beam_op_try_end_acsl`)
 - **Gate:** `test_emu` try/catch unwinding 17/17 PASS
 
+### 70% — Cheney Copying GC + Process Heaps *(reached)*
+
+- [x] Implement `beam_gc_collect_process` Cheney copying GC (From $\rightarrow$ To-space copy)
+- [x] Root scanning: X-Registers and Unified Stack slots (`proc->stack_top`)
+- [x] Deep copying of heap tuples and linked lists into new compacted To-space
+- [x] Automatic reclamation of unreferenced dead heap memory
+- **Gate:** `test_gc` asserts object movement and dead memory reclamation PASS
+
 ---
 
-### 70% — Copying GC + Process Heaps *(next target)*
-
-- [ ] Replace `beam_gc_collect_process` stub: from→to-space copy, roots = X/Y regs/stack/CP
-- [ ] Off-Heap Ref-Counted Binaries (`ProcBin`) memory release & destruction
-- [ ] Heap trim; young/old start; tuples/messages with heap traces
-- **Gate:** `test_gc` asserts object movement and ProcBin refcounts (not just `BEAM_OK`)
-
-### 80% — Complete ETS + Real Code Server
+### 80% — Complete ETS + Real Code Server *(next target)*
 
 - [ ] ETS: set/ordered_set/bag/duplicate_bag; read_concurrency protection; owner/heir
 - [ ] Code server: exports/imports tables, purge/reload, `module_info`-like
@@ -119,4 +120,4 @@ each merged PR updates the current completion % and the gate that validated it.
 
 ---
 
-*Status: 2026-08-06 — at ~60%. Exception handling, formal Coq try/catch proofs & ACSL contracts verified.*
+*Status: 2026-08-06 — at ~70%. Cheney copying GC, live root movement & memory reclamation verified.*

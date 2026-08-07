@@ -1,5 +1,5 @@
 {
-  "commit": "5c694bcc84cbe0d62b591d5805f644234668f715",
+  "commit": "cfc3c40992eda77ff238f6ccabec5c3b1df436ea",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -280,6 +280,10 @@
     {
       "source": "memory/beam_gc.c",
       "target": "beam_gc_internal.h"
+    },
+    {
+      "source": "memory/beam_gc.c",
+      "target": "../scheduler/erl_process_internal.h"
     },
     {
       "source": "memory/beam_gc.c",

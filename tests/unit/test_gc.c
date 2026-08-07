@@ -5,6 +5,7 @@
 #include "beam_core.h"
 #include "beam_memory.h"
 #include "beam_scheduler.h"
+#include "../../src/scheduler/erl_process_internal.h"
 #include "mock_memory.h"
 
 void test_garbage_collection(void) {
@@ -17,15 +18,40 @@ void test_garbage_collection(void) {
     assert(proc != NULL);
 
     /* Allocate terms on process heap */
-    Eterm* term1 = beam_process_alloc_heap(proc, 2);
-    assert(term1 != NULL);
-    term1[0] = make_small_int(100);
-    term1[1] = make_small_int(200);
+    Eterm* tuple_buf = beam_process_alloc_heap(proc, 3);
+    assert(tuple_buf != NULL);
+    tuple_buf[0] = make_small_int(2); /* arity = 2 */
+    tuple_buf[1] = make_small_int(100);
+    tuple_buf[2] = make_small_int(200);
 
-    /* Trigger GC on process heap */
+    Eterm tuple_term = (Eterm)(((uintptr_t)tuple_buf) | TAG_PRIMARY_BOXED);
+
+    /* Allocate dead garbage term on heap that is NOT pointed to by any root register */
+    Eterm* dead_buf = beam_process_alloc_heap(proc, 2);
+    assert(dead_buf != NULL);
+    dead_buf[0] = make_small_int(9999);
+    dead_buf[1] = make_small_int(8888);
+
+    /* Store tuple_term in X[0] register root */
+    proc->frame.x_regs[0] = tuple_term;
+
+    size_t heap_top_before = proc->heap_top;
+    assert(heap_top_before == 5);
+    (void)heap_top_before;
+
+    /* Trigger Cheney GC on process heap */
     beam_result_t res = beam_gc_collect_process(proc);
     assert(res == BEAM_OK);
     (void)res;
+
+    /* Verify GC compacted live roots (tuple_term moved) and dropped dead_buf */
+    assert(proc->heap_top == 3); /* Only tuple (3 words) preserved, dead_buf reclaimed */
+    Eterm gc_tuple = proc->frame.x_regs[0];
+    assert(beam_is_tuple(gc_tuple));
+    assert(beam_tuple_arity(gc_tuple) == 2);
+    assert(eterm_to_small_int(beam_tuple_element(gc_tuple, 0)) == 100);
+    assert(eterm_to_small_int(beam_tuple_element(gc_tuple, 1)) == 200);
+    (void)gc_tuple;
 
     beam_process_destroy(proc);
 
