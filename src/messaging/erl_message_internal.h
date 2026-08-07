@@ -4,6 +4,8 @@
 #include "beam_messaging.h"
 #include "beam_scheduler.h"
 
+#include <pthread.h>
+
 typedef struct beam_message beam_message_t;
 
 struct beam_message {
@@ -17,6 +19,7 @@ struct beam_mailbox {
     beam_message_t* save_cursor;
     beam_message_t* save_prev;
     size_t count;
+    pthread_mutex_t lock;
     beam_allocator_i alloc;
 };
 

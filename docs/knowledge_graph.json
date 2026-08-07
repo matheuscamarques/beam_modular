@@ -1,5 +1,5 @@
 {
-  "commit": "ba065cc285f92abbe6879257bfffea7edbb503fd",
+  "commit": "31abef41c5de67e42adc1ad2f847c256ee302fd3",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -72,6 +72,10 @@
     {
       "source": "scheduler/run_queue_internal.h",
       "target": "beam_scheduler.h"
+    },
+    {
+      "source": "scheduler/run_queue_internal.h",
+      "target": "pthread.h"
     },
     {
       "source": "scheduler/erl_process_internal.h",
@@ -291,10 +295,6 @@
     },
     {
       "source": "memory/beam_gc.c",
-      "target": "../messaging/erl_message_internal.h"
-    },
-    {
-      "source": "memory/beam_gc.c",
       "target": "string.h"
     },
     {
@@ -312,6 +312,10 @@
     {
       "source": "messaging/erl_message_internal.h",
       "target": "beam_scheduler.h"
+    },
+    {
+      "source": "messaging/erl_message_internal.h",
+      "target": "pthread.h"
     },
     {
       "source": "global/dist_node.c",
@@ -344,6 +348,10 @@
     {
       "source": "global/atom_table.c",
       "target": "string.h"
+    },
+    {
+      "source": "global/atom_table.c",
+      "target": "pthread.h"
     },
     {
       "source": "io/sys_poll.c",

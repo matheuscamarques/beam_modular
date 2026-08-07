@@ -9,12 +9,14 @@ beam_run_queue_t* beam_run_queue_create(const beam_allocator_i* alloc) {
 
     memset(rq, 0, sizeof(beam_run_queue_t));
     rq->alloc = *alloc;
+    pthread_mutex_init(&rq->lock, NULL);
     return rq;
 }
 
 void beam_run_queue_destroy(beam_run_queue_t* rq) {
     if (!rq) return;
 
+    pthread_mutex_destroy(&rq->lock);
     beam_allocator_i alloc = rq->alloc;
 
     for (int p = 0; p < BEAM_NUM_PRIORITIES; p++) {
@@ -38,6 +40,7 @@ beam_result_t beam_run_queue_enqueue(beam_run_queue_t* rq, beam_process_t* proc,
     node->proc = proc;
     node->next = NULL;
 
+    pthread_mutex_lock(&rq->lock);
     priority_level_queue_t* q = &rq->queues[prio];
     if (!q->tail) {
         q->head = node;
@@ -48,13 +51,20 @@ beam_result_t beam_run_queue_enqueue(beam_run_queue_t* rq, beam_process_t* proc,
     }
     q->count++;
     rq->total_count++;
+    pthread_mutex_unlock(&rq->lock);
 
     beam_process_set_state(proc, BEAM_PROC_STATE_RUNNABLE);
     return BEAM_OK;
 }
 
 beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq) {
-    if (!rq || rq->total_count == 0) return NULL;
+    if (!rq) return NULL;
+
+    pthread_mutex_lock(&rq->lock);
+    if (rq->total_count == 0) {
+        pthread_mutex_unlock(&rq->lock);
+        return NULL;
+    }
 
     /* Dequeue highest priority process available (MAX -> HIGH -> NORMAL -> LOW) */
     for (int p = 0; p < BEAM_NUM_PRIORITIES; p++) {
@@ -69,6 +79,7 @@ beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq) {
             }
             q->count--;
             rq->total_count--;
+            pthread_mutex_unlock(&rq->lock);
 
             rq->alloc.free(rq->alloc.ctx, node);
             beam_process_set_state(proc, BEAM_PROC_STATE_RUNNING);
@@ -76,6 +87,7 @@ beam_process_t* beam_run_queue_dequeue(beam_run_queue_t* rq) {
         }
     }
 
+    pthread_mutex_unlock(&rq->lock);
     return NULL;
 }
 

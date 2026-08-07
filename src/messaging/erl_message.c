@@ -9,6 +9,7 @@ beam_mailbox_t* beam_mailbox_create(const beam_allocator_i* alloc) {
 
     memset(mbox, 0, sizeof(beam_mailbox_t));
     mbox->alloc = *alloc;
+    pthread_mutex_init(&mbox->lock, NULL);
     return mbox;
 }
 
@@ -16,6 +17,7 @@ void beam_mailbox_destroy(beam_mailbox_t* mbox) {
     if (!mbox) return;
 
     beam_allocator_i alloc = mbox->alloc;
+    pthread_mutex_destroy(&mbox->lock);
     beam_message_t* curr = mbox->head;
     while (curr) {
         beam_message_t* next = curr->next;
@@ -34,6 +36,7 @@ beam_result_t beam_mailbox_enqueue(beam_mailbox_t* mbox, Eterm msg) {
     node->body = msg;
     node->next = NULL;
 
+    pthread_mutex_lock(&mbox->lock);
     if (!mbox->tail) {
         mbox->head = node;
         mbox->tail = node;
@@ -42,6 +45,7 @@ beam_result_t beam_mailbox_enqueue(beam_mailbox_t* mbox, Eterm msg) {
         mbox->tail = node;
     }
     mbox->count++;
+    pthread_mutex_unlock(&mbox->lock);
 
     return BEAM_OK;
 }

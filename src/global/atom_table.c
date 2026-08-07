@@ -1,5 +1,8 @@
+#define _GNU_SOURCE
 #include "beam_global.h"
 #include <string.h>
+
+#include <pthread.h>
 
 #define BEAM_ATOM_DEFAULT_CAPACITY 256
 
@@ -18,6 +21,7 @@ struct beam_atom_table {
     size_t bucket_count;
     size_t count;
     size_t index_map_capacity;
+    pthread_rwlock_t rwlock;
 };
 
 static uint32_t hash_atom_name(const char* name, size_t len) {
@@ -66,6 +70,7 @@ beam_atom_table_t* beam_atom_table_create(const beam_allocator_i* alloc, size_t 
         return NULL;
     }
     memset(table->index_map, 0, sizeof(beam_atom_entry_t*) * table->index_map_capacity);
+    pthread_rwlock_init(&table->rwlock, NULL);
 
     return table;
 }
@@ -73,6 +78,7 @@ beam_atom_table_t* beam_atom_table_create(const beam_allocator_i* alloc, size_t 
 void beam_atom_table_destroy(beam_atom_table_t* table) {
     if (!table) return;
 
+    pthread_rwlock_destroy(&table->rwlock);
     beam_allocator_i alloc = table->alloc;
 
     for (size_t i = 0; i < table->bucket_count; i++) {
@@ -152,33 +158,65 @@ Eterm beam_atom_intern(beam_atom_table_t* table, const char* name) {
     if (!table || !name) return 0;
 
     size_t len = strlen(name);
+    pthread_rwlock_rdlock(&table->rwlock);
     beam_atom_entry_t* existing = atom_table_find_entry(table, name, len);
     if (existing) {
-        return atom_eterm(existing->index);
+        Eterm ret = atom_eterm(existing->index);
+        pthread_rwlock_unlock(&table->rwlock);
+        return ret;
     }
+    pthread_rwlock_unlock(&table->rwlock);
 
-    return atom_table_insert(table, name, len);
+    pthread_rwlock_wrlock(&table->rwlock);
+    existing = atom_table_find_entry(table, name, len);
+    if (existing) {
+        Eterm ret = atom_eterm(existing->index);
+        pthread_rwlock_unlock(&table->rwlock);
+        return ret;
+    }
+    Eterm res = atom_table_insert(table, name, len);
+    pthread_rwlock_unlock(&table->rwlock);
+    return res;
 }
 
 Eterm beam_atom_intern_length(beam_atom_table_t* table, const char* name, size_t len) {
     if (!table || !name) return 0;
 
+    pthread_rwlock_rdlock(&table->rwlock);
     beam_atom_entry_t* existing = atom_table_find_entry(table, name, len);
     if (existing) {
-        return atom_eterm(existing->index);
+        Eterm ret = atom_eterm(existing->index);
+        pthread_rwlock_unlock(&table->rwlock);
+        return ret;
     }
+    pthread_rwlock_unlock(&table->rwlock);
 
-    return atom_table_insert(table, name, len);
+    pthread_rwlock_wrlock(&table->rwlock);
+    existing = atom_table_find_entry(table, name, len);
+    if (existing) {
+        Eterm ret = atom_eterm(existing->index);
+        pthread_rwlock_unlock(&table->rwlock);
+        return ret;
+    }
+    Eterm res = atom_table_insert(table, name, len);
+    pthread_rwlock_unlock(&table->rwlock);
+    return res;
 }
 
 const char* beam_atom_lookup(const beam_atom_table_t* table, Eterm atom_term) {
     if (!table) return NULL;
     if ((atom_term & 0x0F) != TAG_IMMED1_ATOM) return NULL;
 
+    beam_atom_table_t* non_const_table = (beam_atom_table_t*)table;
+    pthread_rwlock_rdlock(&non_const_table->rwlock);
     uint32_t index = atom_index(atom_term);
-    if (index >= table->count) return NULL;
+    if (index >= table->count) {
+        pthread_rwlock_unlock(&non_const_table->rwlock);
+        return NULL;
+    }
 
     beam_atom_entry_t* entry = table->index_map[index];
+    pthread_rwlock_unlock(&non_const_table->rwlock);
     if (!entry) return NULL;
 
     return entry->name;
