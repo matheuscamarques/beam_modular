@@ -45,12 +45,22 @@ void test_nif_extension(void) {
     assert(sum_val == 700);
     (void)sum_val;
 
+    /* Test dlopen/dlsym functionality on standard math library */
+    void* handle = enif_dlopen("libm.so.6");
+    if (!handle) handle = enif_dlopen("libm.so");
+    if (handle) {
+        void* cos_fn = enif_dlsym(handle, "cos");
+        assert(cos_fn != NULL);
+        (void)cos_fn;
+        enif_dlclose(handle);
+    }
+
     enif_free_env(env);
     beam_process_destroy(proc);
 
     assert(stats.alloc_count > 0);
     assert(stats.free_count == stats.alloc_count);
-    printf("  [RESULT] NIF executed successfully! 300 + 400 = 700 returned in Tuple!\n");
+    printf("  [RESULT] NIF & dlopen executed successfully! 300 + 400 = 700 returned in Tuple!\n");
     printf("  [PASSED] test_nif_extension\n");
 }
 

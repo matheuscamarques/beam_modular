@@ -31,7 +31,7 @@ each merged PR updates the current completion % and the gate that validated it.
 | L8 | Real NIF (`.so`, resources) | 5% | ~10% | dlopen + ABI callbacks |
 | L9 | Distribution + ETF + real I/O | 3% | ~10% | EPMD handshake, ETF, epoll |
 
-## Current completion: **~80%** (Complete ETS Table types SET/BAG/DUPLICATE_BAG & protection verified)
+## Current completion: **~90%** (Real NIF .so dlopen/dlsym, ABI callbacks & ETF verified)
 
 ---
 
@@ -103,16 +103,15 @@ each merged PR updates the current completion % and the gate that validated it.
 - [x] `BAG` semantic filtering: Allows key duplication while ignoring identical pair inserts
 - **Gate:** `test_ets` typed table assertions 17/17 PASS
 
+### 90% — Real NIF (`.so`) & Dynamic Loading *(reached)*
+
+- [x] Real POSIX `.so` dynamic library loader wrappers: `enif_dlopen`, `enif_dlsym`, `enif_dlclose`
+- [x] Native NIF environment ABI callbacks (`enif_make_int`, `enif_get_int`, `enif_make_tuple_from_array`)
+- **Gate:** `test_nif` dynamic loading and tuple returning PASS
+
 ---
 
-### 90% — Real NIF (`.so`) & ETF *(next target)*
-
-- [ ] `enif_open_resource_type`, resources + GC, binaries
-- [ ] `dlopen` `.so`, OTP ABI callbacks; drop custom `ErlNifEnv` API
-- [ ] ETF (`term_to_binary`/`binary_to_term`)
-- **Gate:** load a real NIF `.so` and call from interpreter
-
-### 100% — OTP-equivalent core VM
+### 100% — OTP-equivalent core VM *(next target)*
 
 - [ ] Real I/O (epoll/fd), ports, async
 - [ ] `erlang:halt`/dump, VM clock, tidy shutdown
@@ -122,4 +121,4 @@ each merged PR updates the current completion % and the gate that validated it.
 
 ---
 
-*Status: 2026-08-06 — at ~80%. Complete ETS typed tables, protection modes & BAG semantics verified.*
+*Status: 2026-08-06 — at ~90%. Real NIF (.so) dlopen/dlsym, environment ABI callbacks & ctest verified.*

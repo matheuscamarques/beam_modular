@@ -35,3 +35,21 @@ Eterm enif_make_tuple_from_array(ErlNifEnv* env, const Eterm* elements, unsigned
     if (!env || !env->proc) return 0;
     return beam_make_tuple(env->proc, (size_t)cnt, elements);
 }
+
+#include <dlfcn.h>
+
+void* enif_dlopen(const char* lib_path) {
+    if (!lib_path) return NULL;
+    return dlopen(lib_path, RTLD_NOW | RTLD_LOCAL);
+}
+
+void* enif_dlsym(void* handle, const char* symbol_name) {
+    if (!handle || !symbol_name) return NULL;
+    return dlsym(handle, symbol_name);
+}
+
+void enif_dlclose(void* handle) {
+    if (handle) {
+        dlclose(handle);
+    }
+}

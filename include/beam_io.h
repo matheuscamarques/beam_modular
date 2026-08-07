@@ -33,4 +33,9 @@ BEAM_NODISCARD Eterm enif_make_int(ErlNifEnv* env, int val);
 BEAM_NODISCARD bool enif_get_int(ErlNifEnv* env, Eterm term, int* out_val);
 BEAM_NODISCARD Eterm enif_make_tuple_from_array(ErlNifEnv* env, const Eterm* elements, unsigned int cnt);
 
+/* Dynamic Shared Object (.so) NIF Loading Operations */
+BEAM_NODISCARD void* enif_dlopen(const char* lib_path);
+BEAM_NODISCARD void* enif_dlsym(void* handle, const char* symbol_name);
+void enif_dlclose(void* handle);
+
 #endif /* BEAM_IO_H */

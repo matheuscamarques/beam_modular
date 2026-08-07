@@ -1,5 +1,5 @@
 {
-  "commit": "f8591625a2702e5ba2423586f6f6b11cdbf7a4bb",
+  "commit": "4da30e7394c4d4940294119ef9d8a67174188de8",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -356,6 +356,10 @@
     {
       "source": "io/erl_nif.c",
       "target": "string.h"
+    },
+    {
+      "source": "io/erl_nif.c",
+      "target": "dlfcn.h"
     },
     {
       "source": "io/sys_poll_internal.h",
