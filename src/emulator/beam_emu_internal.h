@@ -7,6 +7,7 @@
 
 #define BEAM_NUM_X_REGISTERS 256
 #define BEAM_MAX_STACK_WORDS 256
+#define BEAM_MAX_CATCH_DEPTH 64
 
 typedef enum {
     BEAM_OP_LABEL = 1,
@@ -36,6 +37,12 @@ typedef enum {
     BEAM_OP_LOOP_REC_END,
     BEAM_OP_REMOVE_MESSAGE,
     BEAM_OP_WAIT,
+    BEAM_OP_TRY,
+    BEAM_OP_TRY_CASE,
+    BEAM_OP_CATCH,
+    BEAM_OP_TRY_END,
+    BEAM_OP_RAISE,
+    BEAM_OP_TRY_CASE_END,
     BEAM_OP_HALT
 } beam_opcode_t;
 
@@ -57,6 +64,17 @@ typedef struct {
     int sp;
     uint32_t cp;
     size_t ip;
+    size_t catch_ip; /* Exception catch jump target label pointer */
+    size_t catch_sp; /* Saved stack pointer for exception unwinding */
+
+    /* Nested exception (try/catch) frames */
+    struct beam_catch_frame {
+        size_t catch_label;      /* label targeted by RAISE when this frame is active */
+        size_t catch_stack_top;  /* saved proc->stack_top for unwind */
+        uint32_t catch_cp;       /* saved continuation pointer */
+        bool wide;            /* whether the catch was entered via RAISE */
+    } catch_stack[BEAM_MAX_CATCH_DEPTH];
+    int catch_depth;
 } beam_emulator_frame_t;
 
 beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction_t* code, size_t code_len, Eterm* out_result);

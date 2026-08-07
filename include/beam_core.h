@@ -53,7 +53,8 @@ typedef enum {
     BEAM_ERR_NOT_FOUND = -3,
     BEAM_ERR_HALT = -4,
     BEAM_ERR_CORRUPT_FILE = -5,
-    BEAM_ERR_BADARG = -6
+    BEAM_ERR_BADARG = -6,
+    BEAM_ERR_EXCEPTION = -7
 } beam_result_t;
 
 /* C23 static_assert validation without 2nd argument message */

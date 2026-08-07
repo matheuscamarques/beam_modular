@@ -23,7 +23,7 @@ each merged PR updates the current completion % and the gate that validated it.
 | L0 | Foundation/architecture (DI, opacity, vtable) | 5% | 100% | `build` + 17 ctest |
 | L1 | Loader `.beam` + Code chunk | 12% | 100% | AtU8 -NumAtoms fix + instr decode |
 | L2 | Term system (10 types) | 15% | 100% | float, big, refc binary, map, fun… |
-| L3 | Interpreter / opcodes | 22% | ~70% (25 opcodes + TCO + Closures) | `emu_loop` parity, X/Y reg, CP & unified stack |
+| L3 | Interpreter / opcodes | 22% | ~75% (33 opcodes + TCO + Closures + Exceptions) | `emu_loop` parity, X/Y reg, CP & unified stack, TRY/CATCH/RAISE unwinding |
 | L4 | Generational copying GC | 10% | ~20% concept | `test_gc` real asserts + ProcBin refc |
 | L5 | Scheduler / multi-scheduler | 12% | ~50% | preemption, N schedulers, timer wheel |
 | L6 | BIFs + guard BIFs | 8% | ~30% | `test_bif` ratios A/B, is_atom, is_tuple, length |

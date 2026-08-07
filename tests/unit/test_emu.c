@@ -132,6 +132,59 @@ void test_opcode_messaging(void) {
     printf("  [PASSED] test_opcode_messaging\n");
 }
 
+void test_opcode_try_catch_unwinding(void) {
+    printf("[UNIT TEST] Testing TRY/CATCH/RAISE Exception Stack Frame Unwinding...\n");
+
+    mock_memory_stats_t stats = {0};
+    beam_allocator_i alloc = mock_memory_create(&stats);
+
+    beam_process_t* proc = beam_process_create(301, 128, &alloc);
+    assert(proc != NULL);
+
+    /* TRY label=2, RAISE X[1]=777 unwinds to label 2 which moves 999 -> X[0] */
+    beam_instruction_t code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 1, .literal = make_small_int(777) },
+        { .opcode = BEAM_OP_TRY, .arg1 = 3 },
+        { .opcode = BEAM_OP_RAISE, .arg1 = 1 },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(555) },
+        { .opcode = BEAM_OP_HALT },
+        { .opcode = BEAM_OP_LABEL, .arg1 = 3 },
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(999) },
+        { .opcode = BEAM_OP_HALT }
+    };
+
+    Eterm result = 0;
+    beam_result_t res = beam_emu_execute_code(proc, code, sizeof(code)/sizeof(code[0]), &result);
+
+    assert(res == BEAM_ERR_HALT);
+    (void)res;
+    assert(eterm_to_small_int(result) == 999);
+
+    /* RAISE without an active catch frame must terminate the process */
+    beam_process_t* proc_uncaught = beam_process_create(302, 128, &alloc);
+    assert(proc_uncaught != NULL);
+
+    beam_instruction_t uncaught_code[] = {
+        { .opcode = BEAM_OP_MOVE, .arg1 = 0, .arg2 = 0, .literal = make_small_int(13) },
+        { .opcode = BEAM_OP_RAISE, .arg1 = 0 }
+    };
+
+    Eterm ures = 0;
+    res = beam_emu_execute_code(proc_uncaught, uncaught_code, sizeof(uncaught_code)/sizeof(uncaught_code[0]), &ures);
+    assert(res == BEAM_ERR_EXCEPTION);
+    (void)res;
+    assert(beam_process_get_state(proc_uncaught) == BEAM_PROC_STATE_EXITED);
+
+    beam_process_destroy(proc);
+    beam_process_destroy(proc_uncaught);
+
+    assert(stats.alloc_count > 0);
+    assert(stats.free_count == stats.alloc_count);
+    printf("  [RESULT] Caught exception via TRY/RAISE unwinding, uncaught RAISE terminated process!\n");
+    printf("  [PASSED] test_opcode_try_catch_unwinding\n");
+}
+
+
 void test_opcode_pattern_matching(void) {
     printf("[UNIT TEST] Testing OpCode Pattern Matching (MATCH_TUPLE & GET_TUPLE_ELEMENT)...\n");
 
@@ -314,5 +367,6 @@ int main(void) {
     test_opcode_call_ext();
     test_opcode_tail_call();
     test_opcode_make_fun2();
+    test_opcode_try_catch_unwinding();
     return 0;
 }

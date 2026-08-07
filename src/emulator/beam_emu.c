@@ -204,11 +204,63 @@ beam_result_t beam_emu_execute_code(beam_process_t* proc, const beam_instruction
                 continue;
             }
 
-            case BEAM_OP_WAIT: {
+case BEAM_OP_WAIT: {
                 /* Yield process and wait for new incoming messages */
                 frame->ip = ip;
                 beam_process_set_state(proc, BEAM_PROC_STATE_WAITING);
                 return BEAM_OK;
+            }
+
+case BEAM_OP_TRY:
+            case BEAM_OP_CATCH: {
+                /* arg1: catch label; push a catch frame so RAISE unwinds here */
+                if (frame->catch_depth >= BEAM_MAX_CATCH_DEPTH) {
+                    return BEAM_ERR_NO_MEMORY;
+                }
+                struct beam_catch_frame* cf = &frame->catch_stack[frame->catch_depth++];
+                cf->catch_label = instr->arg1;
+                cf->catch_stack_top = proc->stack_top;
+                cf->catch_cp = frame->cp;
+                frame->catch_ip = instr->arg1;
+                frame->catch_sp = proc->stack_top;
+                break;
+            }
+
+            case BEAM_OP_TRY_CASE:
+            case BEAM_OP_TRY_CASE_END: {
+                /* Enter/exit the catch-clause region; alignment marker no-op */
+                break;
+            }
+
+            case BEAM_OP_TRY_END: {
+                /* Clean exit from the try block: pop innermost catch frame */
+                if (frame->catch_depth > 0) {
+                    frame->catch_depth--;
+                    struct beam_catch_frame* prev = NULL;
+                    if (frame->catch_depth > 0) {
+                        prev = &frame->catch_stack[frame->catch_depth - 1];
+                    }
+                    frame->catch_ip = prev ? prev->catch_label : 0;
+                    frame->catch_sp = prev ? prev->catch_stack_top : 0;
+                }
+                break;
+            }
+
+            case BEAM_OP_RAISE: {
+                /* arg1: X register holding the exception term */
+                Eterm exc = (instr->arg1 < BEAM_NUM_X_REGISTERS) ? frame->x_regs[instr->arg1] : 0;
+                if (frame->catch_depth == 0) {
+                    /* Uncaught exception terminates the process */
+                    beam_process_set_state(proc, BEAM_PROC_STATE_EXITED);
+                    return BEAM_ERR_EXCEPTION;
+                }
+                struct beam_catch_frame* cf = &frame->catch_stack[frame->catch_depth - 1];
+                size_t label = cf->catch_label;
+                proc->stack_top = cf->catch_stack_top; /* unwind stack frames */
+                frame->catch_depth--;
+                frame->x_regs[0] = exc; /* deliver term to catch clause */
+                JUMP_TO_LABEL(label);
+                continue;
             }
 
             case BEAM_OP_MATCH_TUPLE: {

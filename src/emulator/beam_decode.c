@@ -151,6 +151,40 @@ beam_instruction_t* beam_decode_code_chunk(const uint8_t* code_chunk, size_t chu
                 instr->arg2 = decode_arg(&p, end);
                 instr->arg3 = decode_arg(&p, end); /* extended list arg */
                 break;
+            case 62: /* catch */
+                instr->opcode = BEAM_OP_CATCH;
+                instr->arg1 = decode_arg(&p, end); // Catch label
+                instr->arg2 = decode_arg(&p, end); // Stack words
+                break;
+            case 63: /* catch_end */
+                instr->opcode = BEAM_OP_TRY_END;
+                instr->arg1 = decode_arg(&p, end); // Deallocate words
+                break;
+            case 104: /* try FtVJ*/
+                instr->opcode = BEAM_OP_TRY;
+                instr->arg1 = decode_arg(&p, end); // Catch label
+                instr->arg2 = decode_arg(&p, end); // Value register
+                break;
+            case 105: /* try_end */
+                instr->opcode = BEAM_OP_TRY_END;
+                instr->arg1 = decode_arg(&p, end); // Deallocate words
+                break;
+            case 106: /* try_case */
+                instr->opcode = BEAM_OP_TRY_CASE;
+                instr->arg1 = decode_arg(&p, end);
+                break;
+            case 107: /* try_case_end */
+                instr->opcode = BEAM_OP_TRY_CASE_END;
+                instr->arg1 = decode_arg(&p, end);
+                break;
+            case 108: /* raise */
+                instr->opcode = BEAM_OP_RAISE;
+                instr->arg1 = decode_arg(&p, end); // Trace
+                instr->arg2 = decode_arg(&p, end); // Value register
+                break;
+            case 161: /* raw_raise */
+                instr->opcode = BEAM_OP_RAISE;
+                break;
             /* Add more opcodes as needed */
             default: {
                 /* Unknown opcode - skip its arguments based on arity table */
