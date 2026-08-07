@@ -1,5 +1,5 @@
 {
-  "commit": "3db71c280634f956188a31151b04fb3073484584",
+  "commit": "0a051868133c1f8fb4975cb0e1eba46c9ed11821",
   "language": "C23",
   "standard": "ISO C23 (-std=c23)",
   "modules": [
@@ -370,6 +370,14 @@
       "target": "string.h"
     },
     {
+      "source": "io/sys_poll.c",
+      "target": "unistd.h"
+    },
+    {
+      "source": "io/sys_poll.c",
+      "target": "sys/epoll.h"
+    },
+    {
       "source": "io/erl_nif_internal.h",
       "target": "beam_io.h"
     },
@@ -388,6 +396,14 @@
     {
       "source": "io/sys_poll_internal.h",
       "target": "beam_io.h"
+    },
+    {
+      "source": "io/sys_poll_internal.h",
+      "target": "sys/epoll.h"
+    },
+    {
+      "source": "io/sys_poll_internal.h",
+      "target": "pthread.h"
     }
   ],
   "formal_verification": {
